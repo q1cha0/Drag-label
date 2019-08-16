@@ -1,1 +1,1 @@
-# DEMO: Drag-label w/ canvas zrender
+# DEMO: Drag label w/ canvas zrender
