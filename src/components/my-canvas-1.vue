@@ -21,10 +21,10 @@
         ], // // [[[]], [[]], [[]]]
         markCirclePos: [[125, 130], [325, 160]],
         // 暂存的本地变量，逻辑层中使用
-        infoRectPrevX: undefined, // 保存矩形前一次渲染的坐标
-        infoRectPrevY: undefined,
-        markCirclePrevX: undefined, // 保存标记点前一次渲染的坐标
-        markCirclePrevY: undefined,
+        // infoRectPrevX: undefined, // 保存矩形前一次渲染的坐标
+        // infoRectPrevY: undefined,
+        // markCirclePrevX: undefined, // 保存标记点前一次渲染的坐标
+        // markCirclePrevY: undefined,
         linkLinePoints: undefined, // 绘制线段的三个点集合
         group: undefined,
         zr: undefined // ZRender 实例
@@ -152,13 +152,13 @@
           });
 
           // 更新矩形坐标值
-          this.infoRectPrevX = curRectX;
-          this.infoRectPrevY = curRectY;
+          // this.infoRectPrevX = curRectX;
+          // this.infoRectPrevY = curRectY;
 
         });
         group.add(infoRect);
-        this.infoRectPrevX = infoRect.shape.x;
-        this.infoRectPrevY = infoRect.shape.y;
+        // this.infoRectPrevX = infoRect.shape.x;
+        // this.infoRectPrevY = infoRect.shape.y;
 
 // ****************** 牵引线 ******************
         let linkLine = new zrender.Polyline({
@@ -193,14 +193,14 @@
           let mouseupX = pos[0] + findCircle.shape.cx;
           let mouseupY = pos[1] + findCircle.shape.cy;
 
-          if (
-            // 判断是否第一次
-            typeof this.markCirclePrevX === 'undefined'
-            && typeof this.markCirclePrevY === 'undefined'
-          ) {
-            this.markCirclePrevX = markCircle.shape.cx;
-            this.markCirclePrevY = markCircle.shape.cy;
-          }
+          // if (
+          //   // 判断是否第一次
+          //   typeof this.markCirclePrevX === 'undefined'
+          //   && typeof this.markCirclePrevY === 'undefined'
+          // ) {
+          //   this.markCirclePrevX = markCircle.shape.cx;
+          //   this.markCirclePrevY = markCircle.shape.cy;
+          // }
           // TODO：若拖拽到边缘位置
           // if (mouseupX <= 10 || 500 - mouseupX <= 10) {
           //   console.log('范围小');
@@ -214,8 +214,8 @@
           // }
 
           // 之后，当前鼠标坐标就成了下一次的 preVal
-          this.markCirclePrevX = mouseupX;
-          this.markCirclePrevY = mouseupY;
+          // this.markCirclePrevX = mouseupX;
+          // this.markCirclePrevY = mouseupY;
 
           // 处理牵引线
           if (
@@ -258,8 +258,8 @@
           });
         });
         group.add(markCircle);
-        this.markCirclePrevX = markCircle.shape.cx;
-        this.markCirclePrevY = markCircle.shape.cy;
+        // this.markCirclePrevX = markCircle.shape.cx;
+        // this.markCirclePrevY = markCircle.shape.cy;
 
         zr.add(group);
       }
