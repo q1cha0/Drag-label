@@ -11,9 +11,11 @@
     name: 'my-canvas',
     data() {
       return {
-        // 算是被动获得的变量，这里目前初始化用
+        // 被动获得的信息的变量，这里目前初始化用
         infoRectPos: [50, 50],
         infoRectSize: [50, 25],
+        infoRectAlias: '别名',
+        infoRectName: '真名',
         linkLinePos: [[100, 63], [125, 63], [125, 130]],
         markCirclePos: [125, 130],
         // 暂存的本地变量，逻辑层中使用
@@ -41,26 +43,30 @@
         style: {
           fill: 'rgba(255, 255, 255, 0)',
           stroke: '#000',
-          text: '别名'
+          text: this.infoRectAlias
         }
       });
       // hover时添加的节点
       let hoverInfoRect = new zrender.Rect({
         shape: {
-          x: this.infoRectPos[0] + 30,
-          y: this.infoRectPos[1] + 30,
+          x: this.infoRectPos[0] + this.infoRectSize[0] / 2,
+          y: this.infoRectPos[1] + this.infoRectSize[1] + 5,
           width: 100,
           height: 50
         },
         style: {
           fill: '#fff',
           stroke: '#ccc',
-          text: '真名'
+          text: this.infoRectName
         }
       });
       // 信息矩形的鼠标事件监听处理
       let hoverTimer = undefined;
       infoRect.on('mouseover', () => {
+        // this.infoRectAlias = '别名1';
+        infoRect.attr('style', {
+          text: '别名11'
+        });
         console.log('rect over');
         hoverTimer = setTimeout(() => {
           zr.add(hoverInfoRect);
@@ -92,7 +98,6 @@
       });
       infoRect.on('mouseup', cbVal => {
         console.log('rect mouseup');
-        console.log(cbVal.target.position);
         // 信息框的宽高
         let infoRectWidth = infoRect.shape.width;
         let infoRectHeight = infoRect.shape.height;
@@ -113,11 +118,10 @@
         if (normalRange) {
           this.linkLinePoints = [];
           let arr1 = []; // 矩形上
-          let arr2 = []; // 拐角上
+          let arr2 = [circleX, undefined]; // 拐角上
           let arr3 = [circleX, circleY]; // 圆上
           arr1[0] = circleX < curRectX ? curRectX : curRectX + infoRectWidth;
           arr1[1] = curRectY + infoRectHeight / 2;
-          arr2[0] = circleX;
           arr2[1] = arr1[1];
           this.linkLinePoints.push(arr1);
           this.linkLinePoints.push(arr2);
@@ -134,6 +138,10 @@
 
         linkLine.attr('shape', {
           points: this.linkLinePoints
+        });
+        hoverInfoRect.attr('shape', {
+          x: curRectX + this.infoRectSize[0] / 2,
+          y: curRectY + this.infoRectSize[1] + 5
         });
 
         // 更新矩形坐标值
@@ -160,17 +168,17 @@
           cy: this.markCirclePos[1],
           r: 5
         },
-        // position: {
-        //   x: 180,
-        //   y: 80
-        // },
         draggable: true
       });
       // 标记点发生拖动事件时
       markCircle.on('mouseup', val => {
         // 获取标记点的新旧坐标
-        let mouseupX = val.offsetX;
-        let mouseupY = val.offsetY;
+        // let mouseupX = val.offsetX;
+        // let mouseupY = val.offsetY;
+        let pos = val.target.position;
+        let mouseupX = pos[0] + markCircle.shape.cx;
+        let mouseupY = pos[1] + markCircle.shape.cy;
+
 
         if (
           // 判断是否第一次
@@ -194,8 +202,8 @@
         // }
 
         // 计算差值
-        let dX = mouseupX - this.markCirclePrevX;
-        let dY = mouseupY - this.markCirclePrevY;
+        // let dX = mouseupX - this.markCirclePrevX;
+        // let dY = mouseupY - this.markCirclePrevY;
         // 之后，当前鼠标坐标就成了下一次的 preVal
         this.markCirclePrevX = mouseupX;
         this.markCirclePrevY = mouseupY;
