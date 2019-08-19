@@ -219,13 +219,15 @@
           console.log(dragPosX, dragPosY);
           let multiX = Math.floor(dragPosX / xSpace);
           let multiY = Math.floor(dragPosY / ySpace);
-
           if (dragPosX % xSpace <= 24 && dragPosY % ySpace <= 24) {
             handlePosX = (multiX > 0 ? multiX : 1) * xSpace;
             handlePosY = (multiY > 0 ? multiY : 1) * ySpace;
-          } if (dragPosX % xSpace <= 24 && dragPosY % ySpace > 24) {
+          } else if (dragPosX % xSpace <= 24 && dragPosY % ySpace > 24) {
             handlePosX = (multiX > 0 ? multiX : 1) * xSpace;
             handlePosY = (multiY > 0 ? multiY + 1 : 1) * ySpace;
+          } else if (dragPosX % xSpace > 24 && dragPosY % ySpace <= 24) {
+            handlePosX = (multiX > 0 ? multiX + 1 : 1) * xSpace;
+            handlePosY = (multiY > 0 ? multiY : 1) * ySpace;
           } else if (dragPosX % xSpace > 24 || dragPosY % ySpace > 24) {
             handlePosX = (multiX > 0 ? multiX + 1 : 1) * xSpace;
             handlePosY = (multiY > 0 ? multiY + 1 : 1) * ySpace;
@@ -233,7 +235,11 @@
           let curRectEl = group.childOfName(`rect-${ tag }`);
           curRectEl.attr({
             // 注意position是要换算成相对位置的
-            position: [handlePosX - curRectPosX, handlePosY - curRectPosY],
+            position: [
+              handlePosX > 50 ? (handlePosX - curRectPosX) : (handlePosX - curRectPosX + 1),
+              handlePosY > 50 ? (handlePosY - curRectPosY) : (handlePosY - curRectPosY + 1)
+              // handlePosY - curRectPosY
+            ],
           });
           rectDragEnd(cbVal);
 
