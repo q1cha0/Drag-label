@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <my-canvas></my-canvas>
-<!--    <button @click="addLabel">+label</button>-->
+    <!--<button @click="addLabel">+label</button>-->
   </div>
 </template>
 
