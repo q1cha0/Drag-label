@@ -7,7 +7,7 @@
 
 <script>
   // import MyCanvas from './components/my-canvas';
-  import MyCanvas from './components/my-canvas-1';
+  import MyCanvas from './components/my-canvas-multi';
 
   export default {
     name: 'app',
