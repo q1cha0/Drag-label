@@ -165,7 +165,8 @@
           name: `line-${i}`,
           shape: {
             points: this.linkLinePos[i]
-          }
+          },
+          cursor: ''
         });
         group.add(linkLine);
 
