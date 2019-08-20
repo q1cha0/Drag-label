@@ -14,7 +14,7 @@
 
 <script>
   import zrender from 'zrender';
-  import { debounce } from 'lodash';
+  // import { debounce } from 'lodash';
 
   const xSpace = 50;
   const ySpace = 50;

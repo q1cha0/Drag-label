@@ -1,18 +1,21 @@
 <template>
   <div id="app">
-    <my-canvas></my-canvas>
+    <leaflet-demo></leaflet-demo>
+    <!--<my-canvas></my-canvas>-->
     <!--<button @click="addLabel">+label</button>-->
   </div>
 </template>
 
 <script>
   // import MyCanvas from './components/my-canvas';
-  import MyCanvas from './components/my-canvas-multi';
+  // import MyCanvas from './components/my-canvas-multi';
+  import LeafletDemo from './components/leaflet-demo';
 
   export default {
     name: 'app',
     components: {
-      MyCanvas
+      // MyCanvas,
+      LeafletDemo
     },
     methods: {
       addLabel() {
