@@ -1,0 +1,9 @@
+Bounds:
+   1. latlng bounds
+   2. point bounds
+
+
+ImageOverlay：
+	Used to load and display a single image over specific bounds of the map.
+	用于在地图的特定矩形边界上，加载和显示单张图像。
+
