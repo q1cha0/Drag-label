@@ -11,11 +11,11 @@
     name: 'leaflet-demo',
     data() {
       return {
-        markerData: '别名1-0.01'
+        markerData: '别名001'
       };
     },
     mounted() {
-      // 扩展 marker rect 类
+      // marker rect 类
       let MyIconRect = L.DivIcon.extend({
         options: {
           className: 'my-div-icon-rect',
@@ -26,16 +26,14 @@
       // 具体的实例配置
       // label Rect 的
       let myIconRect_1 = new MyIconRect({
-        html: `<span>${ this.markerData }</span>`,
+        html: `<span>${this.markerData}</span>`,
       });
       // label circle 的
       let myIconCircle_1 = L.divIcon({
         className: 'my-div-icon-circle',
       });
-      // you can set .my-div-icon styles in CSS
-      // L.marker([50.505, 30.57], { icon: myIcon }).addTo(map);
 
-      // 绘制牵引线
+      // 牵引线
       let linkLine_latlngs_1 = [ // lat:维度-Y lng:经度-X
         [100, 100],
         [100, 200],
@@ -63,23 +61,27 @@
         console.log(xLng, yLat);
         // let xLngFrac = Number(xLng.split('.')[1][0]);
         // let yLngFrac = Number(yLat.split('.')[1][0]);
-        if (xLng % 50 <= 50 && yLat % 50 <= 50) {
-          autoXLng = Math.floor(Number(xLng));
-          autoYLat = Math.floor(Number(yLat));
-        } else if (xLng % 50 <= 50 && yLat % 50 > 50) {
-          autoXLng = Math.floor(Number(xLng));
-          autoYLat = Math.ceil(Number(yLat));
-        } else if (xLng % 50 > 50 && yLat % 50 <= 50) {
-          autoXLng = Math.ceil(Number(xLng));
-          autoYLat = Math.floor(Number(yLat));
-        } else if (xLng % 50 > 50 && yLat % 50 > 50) {
-          autoXLng = Math.ceil(Number(xLng));
-          autoYLat = Math.ceil(Number(yLat));
+        let yuXLng = xLng % 50; // 取余
+        let reYuXLng = (yuXLng > 0 ? 50 : -50) - yuXLng; // 余数的反面
+        let yuYLat = yLat % 50;
+        let reYuYLat = (yuYLat > 0 ? 50 : -50) - yuYLat;
+        if (Math.abs(yuXLng) <= 25 && Math.abs(yuYLat) <= 25) {
+          autoXLng = xLng - yuXLng;
+          autoYLat = yLat - yuYLat;
+        } else if (Math.abs(yuXLng) <= 25 && Math.abs(yuYLat) > 25) {
+          autoXLng = xLng - yuXLng;
+          autoYLat = yLat + reYuYLat;
+        } else if (Math.abs(yuXLng) > 25 && Math.abs(yuYLat) <= 25) {
+          autoXLng = xLng + reYuXLng;
+          autoYLat = yLat - yuYLat;
+        } else if (Math.abs(yuXLng) > 25 && Math.abs(yuYLat) > 25) {
+          autoXLng = xLng + reYuXLng;
+          autoYLat = yLat + reYuYLat;
         }
-        labelRect_1.setLatLng([autoYLat || yLat, autoXLng || xLng]);
+        labelRect_1.setLatLng([autoYLat, autoXLng]);
 
         // 重置牵引线的坐标
-        linkLine_latlngs_1[0] = [autoYLat || yLat, autoXLng || xLng];
+        linkLine_latlngs_1[0] = [autoYLat, autoXLng];
         linkLine_1.setLatLngs(linkLine_latlngs_1);
 
       });
@@ -91,6 +93,8 @@
       labelCircle_1.on('dragend', e => {
         console.log(e.target._latlng);
         // 更新牵引线坐标
+        let lineY = linkLine_latlngs_1[1][0];
+        linkLine_latlngs_1[1] = [lineY, e.target._latlng.lng];
         linkLine_latlngs_1[2] = e.target._latlng;
         linkLine_1.setLatLngs(linkLine_latlngs_1);
 
@@ -98,7 +102,7 @@
         this.markerData = '别名' + (Math.random() * 100).toFixed(0);
         labelRect_1.setIcon(
           new MyIconRect({
-            html: `<span>${ this.markerData }</span>`
+            html: `<span>${this.markerData}</span>`
           })
         );
       });
@@ -189,13 +193,8 @@
   }
 
   .my-div-icon-rect {
-    /*width: 80px !important;*/
-    /*height: 20px !important;*/
     border: 1px solid #fff;
     background-color: #fff;
-    /*position: relative;*/
-    /*left: -50%;*/
-    /*top: -50% !important;*/
   }
 
   .my-div-icon-circle {
