@@ -15,12 +15,12 @@
       };
     },
     mounted() {
-      // marker rect 类
+      // marker Div icon 类
       let MyIconRect = L.DivIcon.extend({
         options: {
           className: 'my-div-icon-rect',
           iconSize: [80, 20],
-          iconAnchor: [85, 10]
+          // iconAnchor: [85, 10]
         }
       });
       // 具体的实例配置
@@ -52,7 +52,7 @@
         icon: myIconRect_1,
       }).bindPopup('真名1');
       labelRect_1.on('dragend', e => {
-        // 首先判断处理磁吸效果
+        // 首先处理磁吸效果
         let autoXLng = undefined;
         let autoYLat = undefined;
         let curLatlng = e.target._latlng;
@@ -85,7 +85,7 @@
         linkLine_1.setLatLngs(linkLine_latlngs_1);
 
       });
-      // 标记圆形 及其事件
+      // 标记圆形
       let labelCircle_1 = L.marker([300, 200], {
         draggable: true,
         icon: myIconCircle_1
