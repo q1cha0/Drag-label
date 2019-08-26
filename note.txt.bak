@@ -8,10 +8,13 @@ ImageOverlay：
 	用于在地图的特定矩形边界上，加载和显示单张图像。
 
 
+TODO：
+	增、删、改 label 的集合要怎么处理？
+	会否不是三个三个的组合？（rect + circle + line)
 
 初始化需要的数据：
 	1、图片大小、当前窗口大小：按比例计算 latlngBounds
 	2、line 的: latlngs'
-	3、rect：latlng'、rect 文字、popup 文字、rect 宽高
+	3、rect：latlng'、rect 文字、popup 文字、rect 宽高/样式
 	4、circle：latlng'
 	5、上述 latlng(s)' 均需要和上一次记录的 bounds 坐标系进行比例换算（重要！）才能带入 1 中的 latlngBounds

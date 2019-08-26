@@ -58,13 +58,14 @@
         });
         // label circle
         let myIconCircle = L.divIcon({
-          className: 'my-div-icon-circle'
+          className: 'my-div-icon-circle',
+          html: `<div style="background-color: ${ this.infoRectIconColor[i] };"></div>`,
         });
 
 // *************** 牵引线 ***************
         linkLineLatlngs = this.linkLineLatlngs[i];
         linkLine = L.polyline(linkLineLatlngs, {
-          color: 'red',
+          color: this.infoRectIconColor[i],
           weight: 1,
           draggable: true
         });
@@ -326,7 +327,14 @@
   }
 
   .my-div-icon-circle {
+    /*background-color: red;*/
+  }
+  .my-div-icon-circle div {
     border-radius: 50%;
-    background-color: red;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
   }
 </style>
