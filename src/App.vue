@@ -9,7 +9,7 @@
 <script>
   // import MyCanvas from './components/my-canvas';
   // import MyCanvas from './components/my-canvas-multi';
-  import LeafletDemo from './components/leaflet-demo';
+  import LeafletDemo from './components/leaflet-multi';
 
   export default {
     name: 'app',
