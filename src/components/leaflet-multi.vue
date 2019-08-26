@@ -11,28 +11,29 @@
     name: 'leaflet-demo',
     data() {
       return {
-        linkLine_1: undefined,
         markerData: '别名001',
         curInfoRectLatlng: [[100, 100], [350, 450]], // 暂存当前信息矩形的经纬度
-        curMarkCircleLatlng: [[300, 200], [250, 350]],
-        linkLinePos: [
+        curMarkCircleLatlng: [[200, 200], [200, 350]],
+        linkLineLatlngs: [
           [
             [90, 180], // 矩形
             [90, 200], // 拐点
-            [300, 200]
+            [200, 200] // 圆上
           ],
           [
             [340, 450],
             [340, 350],
-            [250, 350]
+            [200, 350]
           ]
-        ]
+        ],
+        infoRectIconSize: [80, 20], // w h
+        infoRectIconColor: ['blue', 'orange']
       };
     },
     mounted() {
-      let linkLine_1 = undefined;
-      let linkLine_latlngs_1 = undefined;
-      let markerLayer_1 = undefined;
+      let linkLine = undefined;
+      let linkLineLatlngs = undefined;
+      let markerLayer = undefined;
       let markerLayerGroupArr = [];
       for (let i = 0; i < this.curInfoRectLatlng.length; i++) {
         L.layerGroup().eachLayer(layer => {
@@ -43,39 +44,42 @@
         let MyIconRect = L.DivIcon.extend({
           options: {
             className: 'my-div-icon-rect',
-            iconSize: [80, 20],
-            iconAnchor: [0, 0]
+            iconSize: this.infoRectIconSize,
+            iconAnchor: [0, 0],
+            popupAnchor: [40, 0]
           }
         });
         // div icon 实例
         // label Rect
-        let myIconRect_1 = new MyIconRect({
-          html: `<span>${this.markerData}</span>`,
+        let myIconRect = new MyIconRect({
+          html: `<div style="border: 1px solid ${
+            this.infoRectIconColor[i]
+          };">${ this.markerData }</div>`,
         });
         // label circle
-        let myIconCircle_1 = L.divIcon({
+        let myIconCircle = L.divIcon({
           className: 'my-div-icon-circle'
         });
 
 // *************** 牵引线 ***************
-        linkLine_latlngs_1 = this.linkLinePos[i];
-        linkLine_1 = L.polyline(linkLine_latlngs_1, {
+        linkLineLatlngs = this.linkLineLatlngs[i];
+        linkLine = L.polyline(linkLineLatlngs, {
           color: 'red',
           weight: 1,
           draggable: true
         });
-        markerLayerGroupArr.push(linkLine_1);
+        markerLayerGroupArr.push(linkLine);
 
         // zoom the map to the polyline
         // map.fitBounds(polyline.getBounds());
 
 // *************** 信息矩形 ***************
-        let infoRect_1 = L.marker(this.curInfoRectLatlng[i], {
+        let infoRect = L.marker(this.curInfoRectLatlng[i], {
           draggable: true,
-          icon: myIconRect_1,
+          icon: myIconRect
         }).bindPopup('真名1');
         // 拖拽释放信息矩形
-        infoRect_1.on('dragend', e => {
+        infoRect.on('dragend', e => {
           let flag = i;
           // 磁吸
           let autoXLng = undefined;
@@ -103,34 +107,52 @@
             autoYLat = newRectYLat + rvRmYLat;
           }
           let autoLatLng = [autoYLat, autoXLng];
-          infoRect_1.setLatLng(autoLatLng);
+          infoRect.setLatLng(autoLatLng);
 
-          // 重绘牵引线
-          // let curMarkCircleXLng = this.curMarkCircleLatlng[i][1];
-          // let curMarkCircleYLat = this.curMarkCircleLatlng[i][0];
+          // 改变牵引线经纬度
           let curMarkCircleXLng = undefined;
           let curMarkCircleYLat = undefined;
-          let linkLineIns = undefined;
-          markerLayer_1.eachLayer(layer => {
-            if (layer['name'] && layer['name'] === `circle-${flag}`) {
+          let linkLineLayer = undefined;
+          markerLayer.eachLayer(layer => {
+            if (
+              layer['name'] && layer['name'] === `circle-${ flag }`
+            ) {
               curMarkCircleXLng = layer._latlng.lng;
               curMarkCircleYLat = layer._latlng.lat;
             }
-            if (layer['name'] && layer['name'] === `line-${flag}`) {
-              linkLineIns = layer;
-            }
+            if (
+              layer['name'] && layer['name'] === `line-${ flag }`
+            ) linkLineLayer = layer;
           });
-          updateLinkLine(curMarkCircleXLng, curMarkCircleYLat, autoXLng, autoYLat, linkLineIns);
+          updateLinkLine(
+            curMarkCircleXLng,
+            curMarkCircleYLat,
+            autoXLng,
+            autoYLat,
+            linkLineLayer
+          );
 
           // 更新信息矩形的实时坐标
           this.curInfoRectLatlng[i] = autoLatLng;
 
         });
-        markerLayerGroupArr.push(infoRect_1);
+        // 开始拖拽矩形
+        infoRect.on('dragstart', () => {
+          infoRect.closePopup();
+        });
+        // 鼠标移入矩形，显示浮窗信息
+        infoRect.on('mouseover', () => {
+          // infoRect.togglePopup();
+        });
+        // 鼠标移除矩形，隐藏浮窗信息
+        infoRect.on('mouseout', () => {
+          // infoRect.togglePopup();
+        });
+        markerLayerGroupArr.push(infoRect);
 // *************** 标记圆形 ***************
         let markCircle_1 = L.marker(this.curMarkCircleLatlng[i], {
           draggable: true,
-          icon: myIconCircle_1
+          icon: myIconCircle
         });
         // 拖拽释放标记圆形
         markCircle_1.on('dragend', e => {
@@ -139,55 +161,64 @@
           let newCircleXLng = newLatlng.lng;
           let newCircleYLat = newLatlng.lat;
           // 重绘牵引线
-          // let curInfoRectXLng = this.curInfoRectLatlng[i][1];
-          // let curInfoRectYLat = this.curInfoRectLatlng[i][0];
           let curInfoRectXLng = undefined;
           let curInfoRectYLat = undefined;
-          let linkLineIns = undefined;
-          markerLayer_1.eachLayer(layer => {
-            if (layer['name'] && layer['name'] === `rect-${flag}`) {
+          let linkLineLayer = undefined;
+          markerLayer.eachLayer(layer => {
+            if (
+              layer['name'] && layer['name'] === `rect-${ flag }`
+            ) {
               curInfoRectXLng = layer._latlng.lng;
               curInfoRectYLat = layer._latlng.lat;
             }
-            if (layer['name'] && layer['name'] === `line-${flag}`) {
-              linkLineIns = layer;
-            }
+            if (
+              layer['name'] && layer['name'] === `line-${ flag }`
+            ) linkLineLayer = layer;
           });
-          updateLinkLine(newCircleXLng, newCircleYLat, curInfoRectXLng, curInfoRectYLat, linkLineIns);
+          updateLinkLine(
+            newCircleXLng,
+            newCircleYLat,
+            curInfoRectXLng,
+            curInfoRectYLat,
+            linkLineLayer
+          );
 
           // 更新标记圆形的实时坐标
           this.curMarkCircleLatlng[i] = [newCircleYLat, newCircleXLng];
           // 更新icon中的信息
           this.markerData = '别名' + (Math.random() * 100).toFixed(0);
-          infoRect_1.setIcon(
+          infoRect.setIcon(
             new MyIconRect({
-              html: `<span>${this.markerData}</span>`
+              html: `<span>${ this.markerData }</span>`
             })
           );
         });
 
         markerLayerGroupArr.push(markCircle_1);
 
-        markerLayer_1 = L.layerGroup(markerLayerGroupArr);
         let newLayers = [];
-        markerLayer_1.eachLayer(layer => {
-          if (!layer.hasOwnProperty('name')) newLayers.push(layer);
+        // 将上述layer放入group
+        markerLayer = L.layerGroup(markerLayerGroupArr);
+        markerLayer.eachLayer(layer => {
+          if (
+            !layer.hasOwnProperty('name')
+          ) newLayers.push(layer);
         });
         newLayers.forEach((val, idx) => {
           switch (idx) {
             case 0:
-              val['name'] = `line-${i}`;
+              val['name'] = `line-${ i }`;
               break;
             case 1:
-              val['name'] = `rect-${i}`;
+              val['name'] = `rect-${ i }`;
               break;
             case 2:
-              val['name'] = `circle-${i}`;
+              val['name'] = `circle-${ i }`;
           }
         });
       }
 
-      // markerLayer_1.eachLayer(layer => {
+      // markerLayer.eachLayer(layer => {
       //   console.log(layer);
       // });
 
@@ -199,7 +230,7 @@
       let markerLayer_2 = L.layerGroup([littleton1, denver1, aurora1, golden1]);
 
       let overlayLabels = {
-        'Markers_1': markerLayer_1,
+        'Markers_1': markerLayer,
         'Markers_2': markerLayer_2
       };
 
@@ -212,7 +243,7 @@
         minZoom: 0,
         maxZoom: 0,
         // center: [0, 0],
-        layers: [markerLayer_1] // 默认显示的图层~
+        layers: [markerLayer] // 默认显示的图层~
       });
       // map.setView([0, 0], 0); // 中心点，scale
       map.fitBounds(latlngBounds);
@@ -220,6 +251,7 @@
       L.control.layers(null, overlayLabels).addTo(map);
 
       // 添加磁吸对齐线层
+      // 扩展gridlayer类
       L.GridLayer.AutoAlignLine = L.GridLayer.extend({
         createTile: function () {
           let tile = document.createElement('div');
@@ -230,31 +262,22 @@
           return tile;
         }
       });
+      // 实例
       L.gridLayer.autoAlignLine = function (opts) {
         return new L.GridLayer.AutoAlignLine(opts);
       };
+      // 添加到layer
       map.addLayer(
-        L.gridLayer.autoAlignLine({pane: 'overlayPane', tileSize: 50, opacity: 0.3})
+        L.gridLayer.autoAlignLine({ pane: 'overlayPane', tileSize: 50, opacity: 0.3 })
       );
 
-      // map.on('click', e => {
-      //   L.popup()
-      //     .setLatLng(e.latlng)
-      //     .setContent("You clicked the map at " + e.latlng.toString())
-      //     .openOn(map);
-      // });
+      // 光标从画布之外移入其中，同时发生了鼠标事件，可以监听到经纬度
+      map.on('mouseup', e => {
+        console.log(e);
+      });
 
-      // check some info
-      // setTimeout(() => {
-      //   console.log(map.getSize());
-      // }, 2000);
-      // console.log(map.getSize());
-      // console.log(map.getBounds());
-      // console.log(map.getPixelBounds());
-
-      function updateLinkLine(cXLng, cYLat, rXLng, rYLat, lineIns) {
-
-        // 第1个就是矩形，第2个坐标y和矩形同，x和圆形同，第3个当前target经纬度
+      function updateLinkLine(cXLng, cYLat, rXLng, rYLat, lineLayer) {
+        // 第1个就是矩形，第2个坐标y和矩形同，x和圆形同，第3个总是当前圆的经纬度
         let arr1 = []; // 矩形
         let arr2 = []; // 拐角
         let arr3 = [cYLat, cXLng]; // 圆上
@@ -262,7 +285,7 @@
           cXLng < rXLng || // 圆形在矩形左边界的左边
           cXLng > rXLng + 80 // 圆形在矩形右边界的右边
         );
-        linkLine_latlngs_1 = [];
+        linkLineLatlngs = [];
         if (normalRange) {
           arr1[1] = cXLng < rXLng ? rXLng : rXLng + 80;
           arr1[0] = rYLat - 20 / 2;
@@ -274,10 +297,10 @@
           arr2[1] = arr1[1];
           arr2[0] = cYLat;
         }
-        linkLine_latlngs_1.push(arr1);
-        linkLine_latlngs_1.push(arr2);
-        linkLine_latlngs_1.push(arr3);
-        lineIns.setLatLngs(linkLine_latlngs_1);
+        linkLineLatlngs.push(arr1);
+        linkLineLatlngs.push(arr2);
+        linkLineLatlngs.push(arr3);
+        lineLayer.setLatLngs(linkLineLatlngs);
       }
 
     }
@@ -290,8 +313,16 @@
   }
 
   .my-div-icon-rect {
-    border: 1px solid #fff;
+    /*border: 1px solid #fff;*/
     background-color: #fff;
+  }
+
+  .my-div-icon-rect div {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
   }
 
   .my-div-icon-circle {
