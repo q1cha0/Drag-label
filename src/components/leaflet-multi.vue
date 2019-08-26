@@ -59,7 +59,9 @@
         // label circle
         let myIconCircle = L.divIcon({
           className: 'my-div-icon-circle',
-          html: `<div style="background-color: ${ this.infoRectIconColor[i] };"></div>`,
+          html: `<div style="background-color: ${
+            this.infoRectIconColor[i]
+          };"></div>`,
         });
 
 // *************** 牵引线 ***************
