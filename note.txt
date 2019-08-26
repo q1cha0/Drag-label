@@ -9,7 +9,7 @@ ImageOverlay：
 
 
 TODO：
-	增、删、改 label 的集合要怎么处理？
+	增、删、改 label 的集合要怎么处理？又如何找到对应的实例？
 	会否不是三个三个的组合？(rect + circle + line)
 
 初始化需要的数据：
