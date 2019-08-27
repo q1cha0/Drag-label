@@ -27,7 +27,7 @@
           ]
         ],
         infoRectIconSize: [80, 20], // w h
-        infoRectIconColor: ['blue', 'orange']
+        infoRectIconColor: ['red', 'orange']
       };
     },
     mounted() {
@@ -36,10 +36,11 @@
       let markerLayer = undefined;
       let markerLayerGroupArr = [];
       for (let i = 0; i < this.curInfoRectLatlng.length; i++) {
-        L.layerGroup().eachLayer(layer => {
-          markerLayerGroupArr.push(layer);
-        });
-        // console.log(markerLayerGroupArr);
+        // L.layerGroup().eachLayer(layer => {
+        //   console.log(layer);
+        //   markerLayerGroupArr.push(layer);
+        // });
+        console.log(markerLayerGroupArr);
         // marker Div icon 类
         let MyIconRect = L.DivIcon.extend({
           options: {
@@ -192,7 +193,9 @@
           this.markerData = '别名' + (Math.random() * 100).toFixed(0);
           infoRect.setIcon(
             new MyIconRect({
-              html: `<span>${ this.markerData }</span>`
+              html: `<div style="border: 1px solid ${
+                this.infoRectIconColor[i]
+              };">${ this.markerData }</div>`
             })
           );
         });
@@ -274,10 +277,19 @@
         L.gridLayer.autoAlignLine({ pane: 'overlayPane', tileSize: 50, opacity: 0.3 })
       );
 
+      // test: 移除layer
+      // setTimeout(() => {
+      //   map.removeLayer(markerLayer);
+      //   console.log('finish');
+      //   markerLayer.eachLayer(l => {
+      //     console.log(l);
+      //   })
+      // }, 1000);
+
       // 光标从画布之外移入其中，同时发生了鼠标事件，可以监听到经纬度
-      map.on('mouseup', e => {
-        console.log(e);
-      });
+      // map.on('mouseup', e => {
+      //   console.log(e);
+      // });
 
       function updateLinkLine(cXLng, cYLat, rXLng, rYLat, lineLayer) {
         // 第1个就是矩形，第2个坐标y和矩形同，x和圆形同，第3个总是当前圆的经纬度
