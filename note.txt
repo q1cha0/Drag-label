@@ -1,21 +1,44 @@
-Bounds:
+★Bounds:
    1. latlng bounds
    2. point bounds
 
+layer / overlay
+★ImageOverlay：
+    Used to load and display a single image over specific bounds of the map.
+    用于在地图的特定矩形边界上，加载和显示单张图像。
 
-ImageOverlay：
-	Used to load and display a single image over specific bounds of the map.
-	用于在地图的特定矩形边界上，加载和显示单张图像。
 
-
-TODO：
-	增、删、改 label 的集合要怎么处理？又如何找到对应的实例？
-	会否不是三个三个的组合？(rect + circle + line)
+★TODO：
+    增、删、改 label 的集合要怎么处理？又如何找到对应的实例？
+    会否不是三个三个的组合？(rect + circle + line)
 修改的时候，首先触发一个事件，此事件拿到修改的这个元素的ID，然后后面以此ID查找
 
-初始化需要的数据：
-	1、图片大小、当前窗口大小：按比例计算 latlngBounds
-	2、line 的: latlngs'
-	3、rect：latlng'、rect 文字、popup 文字、rect 宽高/样式
-	4、circle：latlng'
-	5、上述 latlng(s)' 均需要和上一次记录的 bounds 坐标系进行比例换算（重要！）才能带入 1 中的 latlngBounds
+★初始化需要的数据：
+    1、图片大小、当前窗口大小：按比例计算 latlngBounds
+    2、line 的: latlngs'
+    3、rect：latlng'、rect 文字、popup 文字、rect 宽高/样式
+    4、circle：latlng'
+    5、上述 latlng(s)' 均需要和上一次记录的 bounds 坐标系进行比例换算（重要！）才能带入 1 中的 latlngBounds
+★元素的数据更新
+    rect popup
+★infoRect 上下结构
+
+★高亮
+    高亮一组，其他的都要熄灭（是否应该使用 layer 的增删来实现？绑定的flag能否起到比较判断的作用？）
+
+
+
+★ 需求
+数据实时更新
+infoRect 上下结构，文字有多长，宽度就显示多长，两者中以最长的为准
+rect + circle + line 点击其中之一，高亮相关元素
+更换图片：（待定）
+自适应
+组合的事件对应问题
+底部tab切换总貌图、拖拽、拖拽时视图显示冲突问题
+
+
+另外生成表格，且可拖拽表格大小
+
+
+rect + circle + line 替换 other

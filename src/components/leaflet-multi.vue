@@ -16,13 +16,13 @@
         curMarkCircleLatlng: [[200, 200], [200, 350]],
         linkLineLatlngs: [
           [
-            [90, 180], // 矩形
-            [90, 200], // 拐点
+            [100, 100], // 矩形
+            [100, 200], // 拐点
             [200, 200] // 圆上
           ],
           [
-            [340, 450],
-            [340, 350],
+            [350, 450],
+            [350, 350],
             [200, 350]
           ]
         ],
@@ -40,7 +40,7 @@
         //   console.log(layer);
         //   markerLayerGroupArr.push(layer);
         // });
-        console.log(markerLayerGroupArr);
+        // console.log(markerLayerGroupArr);
         // marker Div icon 类
         let MyIconRect = L.DivIcon.extend({
           options: {
@@ -55,7 +55,7 @@
         let myIconRect = new MyIconRect({
           html: `<div style="border: 1px solid ${
             this.infoRectIconColor[i]
-          };">${ this.markerData }</div>`,
+          };">${ this.markerData }</div>`
         });
         // label circle
         let myIconCircle = L.divIcon({
@@ -70,7 +70,7 @@
         linkLine = L.polyline(linkLineLatlngs, {
           color: this.infoRectIconColor[i],
           weight: 1,
-          draggable: true
+          // draggable: true
         });
         markerLayerGroupArr.push(linkLine);
 
@@ -144,6 +144,11 @@
         infoRect.on('dragstart', () => {
           infoRect.closePopup();
         });
+        infoRect.on('click', () => {
+          // 关闭默认marker打开的popup
+          infoRect.closePopup();
+
+        });
         // 鼠标移入矩形，显示浮窗信息
         infoRect.on('mouseover', () => {
           // infoRect.togglePopup();
@@ -195,7 +200,8 @@
             new MyIconRect({
               html: `<div style="border: 1px solid ${
                 this.infoRectIconColor[i]
-              };">${ this.markerData }</div>`
+              };">${ this.markerData }</div>`,
+              className: 'my-div-icon-rect-shadow'
             })
           );
         });
@@ -203,7 +209,7 @@
         markerLayerGroupArr.push(markCircle_1);
 
         let newLayers = [];
-        // 将上述layer放入group
+        // 将layers放入group
         markerLayer = L.layerGroup(markerLayerGroupArr);
         markerLayer.eachLayer(layer => {
           if (
@@ -220,6 +226,7 @@
               break;
             case 2:
               val['name'] = `circle-${ i }`;
+              break;
           }
         });
       }
@@ -245,9 +252,9 @@
       let map = L.map('map', {
         maxBounds: latlngBounds,
         crs: L.CRS.Simple,
-        dragging: false,
-        minZoom: 0,
-        maxZoom: 0,
+        dragging: true,
+        // minZoom: 0,
+        // maxZoom: 0,
         // center: [0, 0],
         layers: [markerLayer] // 默认显示的图层~
       });
@@ -302,13 +309,17 @@
         );
         linkLineLatlngs = [];
         if (normalRange) {
-          arr1[1] = cXLng < rXLng ? rXLng : rXLng + 80;
-          arr1[0] = rYLat - 20 / 2;
+          // arr1[1] = cXLng < rXLng ? rXLng : rXLng + 80;
+          arr1[1] = rXLng;
+          // arr1[0] = rYLat - 20 / 2;
+          arr1[0] = rYLat;
           arr2[1] = cXLng;
           arr2[0] = arr1[0];
         } else {
-          arr1[1] = rXLng + 80 / 2;
-          arr1[0] = cYLat > rYLat ? rYLat : rYLat - 20;
+          // arr1[1] = rXLng + 80 / 2;
+          arr1[1] = rXLng;
+          // arr1[0] = cYLat > rYLat ? rYLat : rYLat - 20;
+          arr1[0] = rYLat;
           arr2[1] = arr1[1];
           arr2[0] = cYLat;
         }
@@ -327,11 +338,21 @@
     height: 600px;
   }
 
+  /*正常的矩形样式*/
   .my-div-icon-rect {
     /*border: 1px solid #fff;*/
     background-color: #fff;
+    /*box-shadow: 4px 4px 3px grey;*/
   }
 
+  /*矩形阴影*/
+  .my-div-icon-rect-shadow {
+    /*border: 1px solid #fff;*/
+    background-color: #fff;
+    box-shadow: 4px 4px 3px grey;
+  }
+
+  /*矩形内的元素*/
   .my-div-icon-rect div {
     position: absolute;
     top: 0;
@@ -340,9 +361,12 @@
     left: 0;
   }
 
+  /*标记圆*/
   .my-div-icon-circle {
     /*background-color: red;*/
   }
+
+  /*标记圆内的元素*/
   .my-div-icon-circle div {
     border-radius: 50%;
     position: absolute;
