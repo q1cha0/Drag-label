@@ -1,6 +1,9 @@
 <template>
   <div class="container">
     <div id="map"></div>
+    <!--<span id="cpt-txt-width" :style='{fontSize: spanFontSize}'>-->
+    <!--  {{ spanVal }}-->
+    <!--</span>-->
     <!--<button @click="changeData">click</button>-->
   </div>
 </template>
@@ -11,7 +14,10 @@
     name: 'leaflet-demo',
     data() {
       return {
+        spanFontSize: '16px',
+        spanVal: '',
         markerData: '别名001',
+        rectPopupInfo: ['第一个', '第二个'],
         curInfoRectLatlng: [[100, 100], [350, 450]], // 暂存当前信息矩形的经纬度
         curMarkCircleLatlng: [[200, 200], [200, 350]],
         linkLineLatlngs: [
@@ -26,8 +32,20 @@
             [200, 350]
           ]
         ],
-        infoRectIconSize: [80, 20], // w h
-        infoRectIconColor: ['red', 'orange']
+        // infoRectIconSize: [80, 20], // w h
+        infoRectIconColor: ['red', 'orange'],
+        rectTxtInfo: [
+          {
+            1: '膨胀机一组',
+            2: '5685 RPM',
+            fontSize: '16px'
+          },
+          {
+            1: 'V1A10688',
+            2: '18.49 um',
+            fontSize: '16px'
+          }
+        ]
       };
     },
     mounted() {
@@ -45,17 +63,32 @@
         let MyIconRect = L.DivIcon.extend({
           options: {
             className: 'my-div-icon-rect',
-            iconSize: this.infoRectIconSize,
+            // iconSize: this.infoRectIconSize,
             iconAnchor: [0, 0],
             popupAnchor: [40, 0]
           }
         });
         // div icon 实例
         // label Rect
+        // 计算 rect divIcon 的宽度
+        let curRectTxtInfo = this.rectTxtInfo[i];
+
+        let resWidth = computeInfoRectWidth(curRectTxtInfo);
+
         let myIconRect = new MyIconRect({
-          html: `<div style="border: 1px solid ${
-            this.infoRectIconColor[i]
-          };">${ this.markerData }</div>`
+          html: `
+            <div style="
+              font-size: ${ curRectTxtInfo.fontSize };border: 1px solid ${ this.infoRectIconColor[i] };
+            ">
+              <div style="border-bottom: 1px solid ${ this.infoRectIconColor[i] };">
+                ${ curRectTxtInfo[1] }
+              </div>
+              <div>
+                ${ curRectTxtInfo[2] }
+              </div>
+            </div>
+          `,
+          iconSize: [resWidth + 2, undefined]
         });
         // label circle
         let myIconCircle = L.divIcon({
@@ -81,7 +114,9 @@
         let infoRect = L.marker(this.curInfoRectLatlng[i], {
           draggable: true,
           icon: myIconRect
-        }).bindPopup('真名1');
+        }).bindPopup(`${ this.rectPopupInfo[i] }`, {
+          closeButton: false
+        });
         // 拖拽释放信息矩形
         infoRect.on('dragend', e => {
           let flag = i;
@@ -136,9 +171,6 @@
             linkLineLayer
           );
 
-          // 更新信息矩形的实时坐标
-          this.curInfoRectLatlng[i] = autoLatLng;
-
         });
         // 开始拖拽矩形
         infoRect.on('dragstart', () => {
@@ -147,24 +179,23 @@
         infoRect.on('click', () => {
           // 关闭默认marker打开的popup
           infoRect.closePopup();
-
         });
         // 鼠标移入矩形，显示浮窗信息
         infoRect.on('mouseover', () => {
-          // infoRect.togglePopup();
+          infoRect.togglePopup();
         });
         // 鼠标移除矩形，隐藏浮窗信息
         infoRect.on('mouseout', () => {
-          // infoRect.togglePopup();
+          infoRect.togglePopup();
         });
         markerLayerGroupArr.push(infoRect);
 // *************** 标记圆形 ***************
-        let markCircle_1 = L.marker(this.curMarkCircleLatlng[i], {
+        let markCircle = L.marker(this.curMarkCircleLatlng[i], {
           draggable: true,
           icon: myIconCircle
         });
         // 拖拽释放标记圆形
-        markCircle_1.on('dragend', e => {
+        markCircle.on('dragend', e => {
           let flag = i;
           let newLatlng = e.target._latlng;
           let newCircleXLng = newLatlng.lng;
@@ -192,21 +223,39 @@
             linkLineLayer
           );
 
-          // 更新标记圆形的实时坐标
-          this.curMarkCircleLatlng[i] = [newCircleYLat, newCircleXLng];
-          // 更新icon中的信息
-          this.markerData = '别名' + (Math.random() * 100).toFixed(0);
+          // test 更新 rect 中的信息
+          let changedTxt = {
+            1: '膨胀机一组检测设备',
+            2: '5685 RPM',
+            fontSize: '20px'
+          };
+
+          let resWidth = computeInfoRectWidth(changedTxt);
+          let rectColor = this.infoRectIconColor;
           infoRect.setIcon(
             new MyIconRect({
-              html: `<div style="border: 1px solid ${
-                this.infoRectIconColor[i]
-              };">${ this.markerData }</div>`,
-              className: 'my-div-icon-rect-shadow'
+              html: `
+                <div style="
+                  font-size: ${ changedTxt.fontSize };border: 1px solid ${ rectColor[i] };
+                ">
+                  <div style="border-bottom: 1px solid ${ rectColor[i] };">
+                    ${ changedTxt[1] }
+                  </div>
+                  <div>
+                    ${ changedTxt[2] }
+                  </div>
+                </div>
+              `,
+              iconSize: [resWidth + 2, undefined]
+              // iconSize: [200, 60],
+              // className: 'my-div-icon-rect-shadow'
             })
           );
+          // test 更新 popup 中的信息
+          infoRect.setPopupContent(`update${ (Math.random() * 100).toFixed(0) }`);
         });
 
-        markerLayerGroupArr.push(markCircle_1);
+        markerLayerGroupArr.push(markCircle);
 
         let newLayers = [];
         // 将layers放入group
@@ -250,7 +299,7 @@
 // *************** map ***************
       let latlngBounds = [[0, 0], [338, 600]]; // “经纬度”边界
       let map = L.map('map', {
-        maxBounds: latlngBounds,
+        // maxBounds: latlngBounds,
         crs: L.CRS.Simple,
         dragging: true,
         // minZoom: 0,
@@ -309,7 +358,7 @@
         );
         linkLineLatlngs = [];
         if (normalRange) {
-          // arr1[1] = cXLng < rXLng ? rXLng : rXLng + 80;
+          // arr1[1] = cXLng < rXLng ? rXLng : rXLng + 80; // 在矩形中间的算法
           arr1[1] = rXLng;
           // arr1[0] = rYLat - 20 / 2;
           arr1[0] = rYLat;
@@ -327,6 +376,25 @@
         linkLineLatlngs.push(arr2);
         linkLineLatlngs.push(arr3);
         lineLayer.setLatLngs(linkLineLatlngs);
+      }
+
+      function computeInfoRectWidth(txtInfo) {
+        let el = document.createElement('span');
+        let bodyDom = document.getElementsByTagName('body')[0]
+        bodyDom.appendChild(el);
+        el.setAttribute('style', `font-size: ${ txtInfo.fontSize };display: inline-block;`);
+        el.setAttribute('class', 'delete-span');
+        let tempWidth = 0;
+        for (let key in txtInfo) {
+          if (key === '1' || key === '2') {
+            el.innerHTML = txtInfo[key];
+            let width = Number(window.getComputedStyle(el).width.split('px')[0]);
+            if (width > tempWidth) tempWidth = width;
+          }
+        }
+        let delDom = document.getElementsByClassName('delete-span');
+        bodyDom.removeChild(delDom[0]);
+        return tempWidth;
       }
 
     }
@@ -354,11 +422,11 @@
 
   /*矩形内的元素*/
   .my-div-icon-rect div {
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
+    /*position: absolute;*/
+    /*top: 0;*/
+    /*right: 0;*/
+    /*bottom: 0;*/
+    /*left: 0;*/
   }
 
   /*标记圆*/
@@ -374,5 +442,10 @@
     right: 0;
     bottom: 0;
     left: 0;
+  }
+
+  #cpt-txt-width {
+    display: inline-block;
+    /*visibility: hidden;*/
   }
 </style>

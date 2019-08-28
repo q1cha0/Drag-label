@@ -20,25 +20,36 @@ layer / overlay
     4、circle：latlng'
     5、上述 latlng(s)' 均需要和上一次记录的 bounds 坐标系进行比例换算（重要！）才能带入 1 中的 latlngBounds
 ★元素的数据更新
-    rect popup
+    TODO：数据更新触发的方式？（重要！存疑※）触发方式决定了内部 update 的代码逻辑
+    rect-popup-content(setPopupContent)
+    rect-info（setIcon）
 ★infoRect 上下结构
+    divIcon
+      |--div
+          |--div.line1
+          |--div.line2
+    如何处理：两行中取最长的一行的宽度，设置 divIcon 的 size？
 
 ★高亮
-    高亮一组，其他的都要熄灭（是否应该使用 layer 的增删来实现？绑定的flag能否起到比较判断的作用？）
+    rect + circle + line 点击其中之一，其他的都要熄灭（
+        是否应该使用 layer 的增删来实现？
+        绑定的flag能否起到比较判断的作用？
+        Docs, popup: or use Map.addLayer to open as many as you want.
+    ）
 
 
 
 ★ 需求
-数据实时更新
-infoRect 上下结构，文字有多长，宽度就显示多长，两者中以最长的为准
-rect + circle + line 点击其中之一，高亮相关元素
-更换图片：（待定）
-自适应
-组合的事件对应问题
-底部tab切换总貌图、拖拽、拖拽时视图显示冲突问题
+    1、数据实时更新
+    2、infoRect 上下结构，文字有多长，宽度就显示多宽，两者中以最长的为准
+    3、rect + circle + line 点击其中之一，高亮相关元素
+    4、更换图片：（待定）
+    5、自适应
+    6、组合的事件对应问题
+    7、底部tab切换总貌图、拖拽、拖拽时视图显示冲突问题
 
 
-另外生成表格，且可拖拽表格大小
+    8、另外生成表格，且可拖拽表格大小
 
 
-rect + circle + line 替换 other
+    9、rect + circle + line 替换 other
