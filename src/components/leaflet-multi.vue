@@ -18,8 +18,8 @@
         spanVal: '',
         markerData: '别名001',
         rectPopupInfo: ['第一个', '第二个'],
-        curInfoRectLatlng: [[100, 100], [350, 450]], // 暂存当前信息矩形的经纬度
-        curMarkCircleLatlng: [[200, 200], [200, 350]],
+        curInfoRectLatlng: [[100, 100], [350, 450], [400, 100], [400, 250]], // 暂存当前信息矩形的经纬度
+        curMarkCircleLatlng: [[200, 200], [200, 350], undefined, undefined],
         linkLineLatlngs: [
           [
             [100, 100], // 矩形
@@ -30,11 +30,21 @@
             [350, 450],
             [350, 350],
             [200, 350]
-          ]
+          ], undefined, undefined
         ],
         // infoRectIconSize: [80, 20], // w h
-        infoRectIconColor: ['red', 'orange'],
+        infoRectIconColor: ['red', 'orange', 'red', 'orange'],
         rectTxtInfo: [
+          {
+            1: '膨胀机一组',
+            2: '5685 RPM',
+            fontSize: '16px'
+          },
+          {
+            1: 'V1A10688',
+            2: '18.49 um',
+            fontSize: '16px'
+          },
           {
             1: '膨胀机一组',
             2: '5685 RPM',
@@ -53,6 +63,14 @@
       let linkLineLatlngs = undefined;
       let markerLayer = undefined;
       let markerLayerGroupArr = [];
+      let MyIconRect = L.DivIcon.extend({
+        options: {
+          className: 'my-div-icon-rect',
+          // iconSize: this.infoRectIconSize,
+          iconAnchor: [0, 0],
+          popupAnchor: [40, 0]
+        }
+      });
       for (let i = 0; i < this.curInfoRectLatlng.length; i++) {
         // L.layerGroup().eachLayer(layer => {
         //   console.log(layer);
@@ -60,14 +78,7 @@
         // });
         // console.log(markerLayerGroupArr);
         // marker Div icon 类
-        let MyIconRect = L.DivIcon.extend({
-          options: {
-            className: 'my-div-icon-rect',
-            // iconSize: this.infoRectIconSize,
-            iconAnchor: [0, 0],
-            popupAnchor: [40, 0]
-          }
-        });
+
         // div icon 实例
         // label Rect
         // 计算 rect divIcon 的宽度
@@ -100,12 +111,15 @@
 
 // *************** 牵引线 ***************
         linkLineLatlngs = this.linkLineLatlngs[i];
-        linkLine = L.polyline(linkLineLatlngs, {
-          color: this.infoRectIconColor[i],
-          weight: 1,
-          // draggable: true
-        });
-        markerLayerGroupArr.push(linkLine);
+        if (linkLineLatlngs) {
+          linkLine = L.polyline(linkLineLatlngs, {
+            color: this.infoRectIconColor[i],
+            weight: 1,
+            className: 'polyline-shadow'
+            // draggable: true
+          });
+          markerLayerGroupArr.push(linkLine);
+        }
 
         // zoom the map to the polyline
         // map.fitBounds(polyline.getBounds());
@@ -172,69 +186,82 @@
           );
 
         });
+        let popupTimer = undefined;
         // 开始拖拽矩形
-        infoRect.on('dragstart', () => {
+        infoRect.on('drag', () => {
           infoRect.closePopup();
+          popupTimer && clearTimeout(popupTimer);
+
+          // test 同时拖拽若干个矩形
+
         });
-        infoRect.on('click', () => {
+        infoRect.on('click', e => {
           // 关闭默认marker打开的popup
           infoRect.closePopup();
+          popupTimer && clearTimeout(popupTimer);
+
+          // test
+          // console.log(e.target);
         });
         // 鼠标移入矩形，显示浮窗信息
         infoRect.on('mouseover', () => {
-          infoRect.togglePopup();
+          popupTimer = setTimeout(() => {
+            infoRect.openPopup();
+          }, 500);
         });
         // 鼠标移除矩形，隐藏浮窗信息
         infoRect.on('mouseout', () => {
-          infoRect.togglePopup();
+          infoRect.closePopup();
+          popupTimer && clearTimeout(popupTimer);
         });
         markerLayerGroupArr.push(infoRect);
 // *************** 标记圆形 ***************
-        let markCircle = L.marker(this.curMarkCircleLatlng[i], {
-          draggable: true,
-          icon: myIconCircle
-        });
-        // 拖拽释放标记圆形
-        markCircle.on('dragend', e => {
-          let flag = i;
-          let newLatlng = e.target._latlng;
-          let newCircleXLng = newLatlng.lng;
-          let newCircleYLat = newLatlng.lat;
-          // 重绘牵引线
-          let curInfoRectXLng = undefined;
-          let curInfoRectYLat = undefined;
-          let linkLineLayer = undefined;
-          markerLayer.eachLayer(layer => {
-            if (
-              layer['name'] && layer['name'] === `rect-${ flag }`
-            ) {
-              curInfoRectXLng = layer._latlng.lng;
-              curInfoRectYLat = layer._latlng.lat;
-            }
-            if (
-              layer['name'] && layer['name'] === `line-${ flag }`
-            ) linkLineLayer = layer;
+        if (this.curMarkCircleLatlng[i]) {
+          let markCircle = L.marker(this.curMarkCircleLatlng[i], {
+            draggable: true,
+            icon: myIconCircle
           });
-          updateLinkLine(
-            newCircleXLng,
-            newCircleYLat,
-            curInfoRectXLng,
-            curInfoRectYLat,
-            linkLineLayer
-          );
+          // 拖拽释放标记圆形
+          markCircle.on('dragend', e => {
+            let flag = i;
+            let newLatlng = e.target._latlng;
+            let newCircleXLng = newLatlng.lng;
+            let newCircleYLat = newLatlng.lat;
+            // 重绘牵引线
+            let curInfoRectXLng = undefined;
+            let curInfoRectYLat = undefined;
+            let linkLineLayer = undefined;
+            markerLayer.eachLayer(layer => {
+              if (
+                layer['name'] && layer['name'] === `rect-${ flag }`
+              ) {
+                curInfoRectXLng = layer._latlng.lng;
+                curInfoRectYLat = layer._latlng.lat;
+              }
+              if (
+                layer['name'] && layer['name'] === `line-${ flag }`
+              ) linkLineLayer = layer;
+            });
+            updateLinkLine(
+              newCircleXLng,
+              newCircleYLat,
+              curInfoRectXLng,
+              curInfoRectYLat,
+              linkLineLayer
+            );
 
-          // test 更新 rect 中的信息
-          let changedTxt = {
-            1: '膨胀机一组检测设备',
-            2: '5685 RPM',
-            fontSize: '20px'
-          };
+            // test 模拟更新 rect 中的信息
+            let changedTxt = {
+              1: '膨胀机一组检测设备',
+              2: '5685 RPM',
+              fontSize: '20px'
+            };
 
-          let resWidth = computeInfoRectWidth(changedTxt);
-          let rectColor = this.infoRectIconColor;
-          infoRect.setIcon(
-            new MyIconRect({
-              html: `
+            let resWidth = computeInfoRectWidth(changedTxt);
+            let rectColor = this.infoRectIconColor;
+            infoRect.setIcon(
+              new MyIconRect({
+                html: `
                 <div style="
                   font-size: ${ changedTxt.fontSize };border: 1px solid ${ rectColor[i] };
                 ">
@@ -246,16 +273,18 @@
                   </div>
                 </div>
               `,
-              iconSize: [resWidth + 2, undefined]
-              // iconSize: [200, 60],
-              // className: 'my-div-icon-rect-shadow'
-            })
-          );
-          // test 更新 popup 中的信息
-          infoRect.setPopupContent(`update${ (Math.random() * 100).toFixed(0) }`);
-        });
+                iconSize: [resWidth + 2, undefined]
+                // iconSize: [200, 60],
+                // className: 'my-div-icon-rect-shadow'
+              })
+            );
+            // test 模拟更新 popup 中的信息
+            infoRect.setPopupContent(`update${ (Math.random() * 100).toFixed(0) }`);
+          });
 
-        markerLayerGroupArr.push(markCircle);
+          markerLayerGroupArr.push(markCircle);
+        }
+
 
         let newLayers = [];
         // 将layers放入group
@@ -285,26 +314,30 @@
       // });
 
       // test
-      let littleton1 = L.marker([0, 1]).bindPopup('This is Littleton, CO.');
-      let denver1 = L.marker([1, 2]).bindPopup('This is Denver, CO.');
-      let aurora1 = L.marker([2, 3]).bindPopup('This is Aurora, CO.');
-      let golden1 = L.marker([3, 4]).bindPopup('This is Golden, CO.');
-      let markerLayer_2 = L.layerGroup([littleton1, denver1, aurora1, golden1]);
+      // let littleton1 = L.marker([0, 1]).bindPopup('This is Littleton, CO.');
+      // let denver1 = L.marker([1, 2]).bindPopup('This is Denver, CO.');
+      // let aurora1 = L.marker([2, 3]).bindPopup('This is Aurora, CO.');
+      // let golden1 = L.marker([3, 4]).bindPopup('This is Golden, CO.');
+      // let markerLayer_2 = L.layerGroup([littleton1, denver1, aurora1, golden1]);
 
       let overlayLabels = {
         'Markers_1': markerLayer,
-        'Markers_2': markerLayer_2
+        // 'Markers_2': markerLayer_2
       };
 
 // *************** map ***************
       let latlngBounds = [[0, 0], [338, 600]]; // “经纬度”边界
       let map = L.map('map', {
-        // maxBounds: latlngBounds,
+        maxBounds: latlngBounds,
         crs: L.CRS.Simple,
-        dragging: true,
-        // minZoom: 0,
-        // maxZoom: 0,
+        dragging: false,
+        minZoom: 0,
+        maxZoom: 0,
         // center: [0, 0],
+        boxZoomBounds: latlngBounds,
+        trackResize: false,
+        zoomAnimation: false,
+        inertia: false,
         layers: [markerLayer] // 默认显示的图层~
       });
       // map.setView([0, 0], 0); // 中心点，scale
@@ -346,6 +379,49 @@
       // map.on('mouseup', e => {
       //   console.log(e);
       // });
+      // test 模拟功能键+鼠标多选 marker
+      map.on('boxzoomend', e => {
+        // console.log(e);
+        let markers = [[400, 100], [400, 250]];
+        let storeArr = [];
+        for (let i = 0; i < markers.length; i++) {
+          if (
+            e.boxZoomBounds.contains(markers[i])
+          ) storeArr.push(markers[i]);
+        }
+        if (storeArr.length === markers.length) {
+          alert('全中');
+          // console.log(L.layerGroup());
+          markerLayer.eachLayer(layer => {
+            debugger
+            console.log(layer.name);
+            // TODO 这里字符串和前面算法违背
+            if (layer.name && (layer.name === 'line-2' || layer.name === 'line-3')) {
+              console.log(layer);
+              let info = this.rectTxtInfo;
+              let resWidth = computeInfoRectWidth(info[3]);
+              layer.setIcon(
+                new MyIconRect({
+                  html: `
+                    <div style="
+                      font-size: ${ info[3].fontSize };border: 1px solid ${ this.infoRectIconColor[3] };
+                    ">
+                      <div style="border-bottom: 1px solid ${ this.infoRectIconColor[3] };">
+                        ${ info[3][1] }
+                      </div>
+                      <div>
+                        ${ info[3][2] }
+                      </div>
+                    </div>
+                  `,
+                  iconSize: [resWidth + 2, undefined],
+                  className: 'my-div-icon-rect-shadow'
+                })
+              );
+            }
+          });
+        }
+      });
 
       function updateLinkLine(cXLng, cYLat, rXLng, rYLat, lineLayer) {
         // 第1个就是矩形，第2个坐标y和矩形同，x和圆形同，第3个总是当前圆的经纬度
@@ -380,22 +456,41 @@
 
       function computeInfoRectWidth(txtInfo) {
         let el = document.createElement('span');
-        let bodyDom = document.getElementsByTagName('body')[0]
+        let bodyDom = document.getElementsByTagName('body')[0];
         bodyDom.appendChild(el);
         el.setAttribute('style', `font-size: ${ txtInfo.fontSize };display: inline-block;`);
         el.setAttribute('class', 'delete-span');
         let tempWidth = 0;
         for (let key in txtInfo) {
-          if (key === '1' || key === '2') {
+          if (txtInfo.hasOwnProperty(key) && (key === '1' || key === '2')) {
             el.innerHTML = txtInfo[key];
             let width = Number(window.getComputedStyle(el).width.split('px')[0]);
             if (width > tempWidth) tempWidth = width;
           }
         }
-        let delDom = document.getElementsByClassName('delete-span');
-        bodyDom.removeChild(delDom[0]);
+        let delDom = document.getElementsByClassName('delete-span')[0];
+        bodyDom.removeChild(delDom);
         return tempWidth;
       }
+
+      (function () {
+        L.Map.BoxZoom.prototype._onMouseUp = function (e) {
+          if ((e.which !== 1) && (e.button !== 1)) return;
+          this._finish();
+          if (!this._moved) return;
+          this._clearDeferredResetState();
+          this._resetStateTimeout = setTimeout(L.Util.bind(this._resetState, this), 0);
+          var bounds = new L.LatLngBounds(
+            this._map.containerPointToLatLng(this._startPoint),
+            this._map.containerPointToLatLng(this._point)
+          );
+          this._map.fire('boxzoomend', { boxZoomBounds: bounds });
+          // cancel fit bound
+          // if (!this._map.options.noFit) {
+          //   this._map.fitBounds(bounds);
+          // }
+        };
+      })();
 
     }
   };
@@ -447,5 +542,11 @@
   #cpt-txt-width {
     display: inline-block;
     /*visibility: hidden;*/
+  }
+
+  .polyline-shadow {
+    /*box-shadow: 5px 5px 10px black;*/
+    filter: drop-shadow(5px 5px 5px #000) !important;
+    /*-webkit-filter: drop-shadow( 5px 2px 5px #000 ) !important;*/
   }
 </style>

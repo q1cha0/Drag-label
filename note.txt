@@ -21,21 +21,25 @@ layer / overlay
     5、上述 latlng(s)' 均需要和上一次记录的 bounds 坐标系进行比例换算（重要！）才能带入 1 中的 latlngBounds
 ★元素的数据更新
     TODO：数据更新触发的方式？（重要！存疑※）触发方式决定了内部 update 的代码逻辑
-    rect-popup-content(setPopupContent)
-    rect-info（setIcon）
+    1、rect-popup-content(setPopupContent)
+    2、rect-info（setIcon）
 ★infoRect 上下结构
-    divIcon
-      |--div
-          |--div.line1
-          |--div.line2
-    如何处理：两行中取最长的一行的宽度，设置 divIcon 的 size？
+    1、divIcon
+          |--div
+              |--div.line1
+              |--div.line2
+    2、如何处理：两行中取最长的一行的宽度，设置 divIcon 的 size？(√)
 
 ★高亮
-    rect + circle + line 点击其中之一，其他的都要熄灭（
+    1、rect + circle + line 点击其中之一，其他的都要熄灭（
         是否应该使用 layer 的增删来实现？
         绑定的flag能否起到比较判断的作用？
         Docs, popup: or use Map.addLayer to open as many as you want.
     ）
+    2、改变样式，样式的开关
+    3、同一个组的，如何关联相应？
+    4、拖动marker，高亮也要随着动
+
 
 
 
