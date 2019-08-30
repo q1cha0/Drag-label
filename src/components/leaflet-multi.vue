@@ -1,9 +1,6 @@
 <template>
   <div class="container">
     <div id="map"></div>
-    <!--<span id="cpt-txt-width" :style='{fontSize: spanFontSize}'>-->
-    <!--  {{ spanVal }}-->
-    <!--</span>-->
     <!--<button @click="changeData">click</button>-->
   </div>
 </template>
@@ -129,7 +126,9 @@
           draggable: true,
           icon: myIconRect
         }).bindPopup(`${ this.rectPopupInfo[i] }`, {
-          closeButton: false
+          closeButton: false,
+          className: 'ins-popup-style',
+          offset: [0, 120]
         });
         // 拖拽释放信息矩形
         infoRect.on('dragend', e => {
@@ -211,7 +210,7 @@
         });
         // 鼠标移除矩形，隐藏浮窗信息
         infoRect.on('mouseout', () => {
-          infoRect.closePopup();
+          // infoRect.closePopup();
           popupTimer && clearTimeout(popupTimer);
         });
         markerLayerGroupArr.push(infoRect);
@@ -262,17 +261,17 @@
             infoRect.setIcon(
               new MyIconRect({
                 html: `
-                <div style="
-                  font-size: ${ changedTxt.fontSize };border: 1px solid ${ rectColor[i] };
-                ">
-                  <div style="border-bottom: 1px solid ${ rectColor[i] };">
-                    ${ changedTxt[1] }
+                  <div style="
+                    font-size: ${ changedTxt.fontSize };border: 1px solid ${ rectColor[i] };
+                  ">
+                    <div style="border-bottom: 1px solid ${ rectColor[i] };">
+                      ${ changedTxt[1] }
+                    </div>
+                    <div>
+                      ${ changedTxt[2] }
+                    </div>
                   </div>
-                  <div>
-                    ${ changedTxt[2] }
-                  </div>
-                </div>
-              `,
+                `,
                 iconSize: [resWidth + 2, undefined]
                 // iconSize: [200, 60],
                 // className: 'my-div-icon-rect-shadow'
@@ -393,11 +392,9 @@
           alert('全中');
           // console.log(L.layerGroup());
           markerLayer.eachLayer(layer => {
-            debugger
             console.log(layer.name);
-            // TODO 这里字符串和前面算法违背
+            // TODO 这里的情况，原来的name算法是有问题的
             if (layer.name && (layer.name === 'line-2' || layer.name === 'line-3')) {
-              console.log(layer);
               let info = this.rectTxtInfo;
               let resWidth = computeInfoRectWidth(info[3]);
               layer.setIcon(
@@ -480,11 +477,12 @@
           if (!this._moved) return;
           this._clearDeferredResetState();
           this._resetStateTimeout = setTimeout(L.Util.bind(this._resetState, this), 0);
-          var bounds = new L.LatLngBounds(
+          let bounds = new L.LatLngBounds(
             this._map.containerPointToLatLng(this._startPoint),
             this._map.containerPointToLatLng(this._point)
           );
           this._map.fire('boxzoomend', { boxZoomBounds: bounds });
+
           // cancel fit bound
           // if (!this._map.options.noFit) {
           //   this._map.fitBounds(bounds);
@@ -539,14 +537,16 @@
     left: 0;
   }
 
-  #cpt-txt-width {
-    display: inline-block;
-    /*visibility: hidden;*/
-  }
-
   .polyline-shadow {
     /*box-shadow: 5px 5px 10px black;*/
     filter: drop-shadow(5px 5px 5px #000) !important;
     /*-webkit-filter: drop-shadow( 5px 2px 5px #000 ) !important;*/
+  }
+
+  .ins-popup-style div:nth-child(1) {
+    border-radius: 0 !important;
+  }
+  .ins-popup-style div:nth-child(2) {
+    display: none;
   }
 </style>

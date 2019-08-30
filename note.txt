@@ -57,4 +57,5 @@ layer / overlay
     8、另外生成表格，且可拖拽表格大小
 
 
-    9、rect + circle + line 替换 other
+    9、rect + circle + line 和 only rect 之间的所谓 样式 的切换，要如何设计？
+        9.1、样式的重置更新
