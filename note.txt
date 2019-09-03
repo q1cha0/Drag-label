@@ -40,7 +40,11 @@ layer / overlay
     2、改变样式，样式的开关
     3、同一个组的，如何关联相应？
     4、拖动marker，高亮也要随着动
+    5、http://plnkr.co/edit/PNxzJqMbcRTuo0jWPGyj?p=preview
+    6、上一次的差异要如何处理
 
+★磁吸
+    TODO：如果放在左上角，需要修改 linkLine 的算法，直接从左边牵出
 
 
 

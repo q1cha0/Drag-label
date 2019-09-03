@@ -43,12 +43,12 @@
             fontSize: '16px'
           },
           {
-            1: '膨胀机一组',
+            1: '膨胀机一组--',
             2: '5685 RPM',
             fontSize: '16px'
           },
           {
-            1: 'V1A10688',
+            1: 'V1A10688--',
             2: '18.49 um',
             fontSize: '16px'
           }
@@ -68,6 +68,7 @@
           popupAnchor: [40, 0]
         }
       });
+      let selectedMarker = false;
       for (let i = 0; i < this.curInfoRectLatlng.length; i++) {
         // L.layerGroup().eachLayer(layer => {
         //   console.log(layer);
@@ -80,9 +81,7 @@
         // label Rect
         // 计算 rect divIcon 的宽度
         let curRectTxtInfo = this.rectTxtInfo[i];
-
         let resWidth = computeInfoRectWidth(curRectTxtInfo);
-
         let myIconRect = new MyIconRect({
           html: `
             <div style="
@@ -98,7 +97,7 @@
           `,
           iconSize: [resWidth + 2, undefined]
         });
-        // label circle
+        // 圆形 div icon
         let myIconCircle = L.divIcon({
           className: 'my-div-icon-circle',
           html: `<div style="background-color: ${
@@ -199,8 +198,59 @@
           infoRect.closePopup();
           popupTimer && clearTimeout(popupTimer);
 
-          // test
+          // test 点击后高亮背景
           // console.log(e.target);
+          let _infoRectIconColor = this.infoRectIconColor;
+          let _rectTxtInfo = this.rectTxtInfo;
+          let isIconRectHighlight = function (idx, isShadow) {
+            let resWidth = computeInfoRectWidth(_rectTxtInfo[idx]);
+            return new MyIconRect({
+              html: `
+                <div style="
+                  font-size: ${
+                    curRectTxtInfo.fontSize
+                  };
+                  border: 1px solid ${
+                    _infoRectIconColor[idx]
+                  };
+                ">
+                  <div style="border-bottom: 1px solid ${ _infoRectIconColor[idx] };">
+                    ${ _rectTxtInfo[idx][1] }
+                  </div>
+                  <div>
+                    ${ _rectTxtInfo[idx][2] }
+                  </div>
+                </div>
+              `,
+              iconSize: [resWidth + 2, undefined],
+              className: isShadow ? 'my-div-icon-rect-shadow' : 'my-div-icon-rect'
+            });
+          };
+          let isIconCircleHighlight = function(idx, isShodow) {
+            return L.divIcon({
+              className: 'my-div-icon-circle',
+              html: `<div style="background-color: ${
+                _infoRectIconColor[idx]
+              };"></div>`,
+            });
+          };
+          let target = e.target;
+          let tgName = target.name;
+          let idx = tgName.split('-')[1];
+          if (selectedMarker) {
+            let prevIdx = selectedMarker.name.split('-')[1];
+            if (selectedMarker !== target) {
+              selectedMarker.setIcon(isIconRectHighlight(prevIdx, false));
+              target.setIcon(isIconRectHighlight(idx, true));
+              selectedMarker = target;
+            } else {
+              selectedMarker.setIcon(isIconRectHighlight(prevIdx, false));
+              selectedMarker = false;
+            }
+          } else {
+            selectedMarker = target;
+            target.setIcon(isIconRectHighlight(idx, true));
+          }
         });
         // 鼠标移入矩形，显示浮窗信息
         infoRect.on('mouseover', () => {
@@ -210,7 +260,7 @@
         });
         // 鼠标移除矩形，隐藏浮窗信息
         infoRect.on('mouseout', () => {
-          // infoRect.closePopup();
+          infoRect.closePopup();
           popupTimer && clearTimeout(popupTimer);
         });
         markerLayerGroupArr.push(infoRect);
@@ -256,7 +306,7 @@
               fontSize: '20px'
             };
 
-            let resWidth = computeInfoRectWidth(changedTxt);
+            let changedResWidth = computeInfoRectWidth(changedTxt);
             let rectColor = this.infoRectIconColor;
             infoRect.setIcon(
               new MyIconRect({
@@ -272,8 +322,7 @@
                     </div>
                   </div>
                 `,
-                iconSize: [resWidth + 2, undefined]
-                // iconSize: [200, 60],
+                iconSize: [changedResWidth + 2, undefined]
                 // className: 'my-div-icon-rect-shadow'
               })
             );
@@ -396,7 +445,7 @@
             // TODO 这里的情况，原来的name算法是有问题的
             if (layer.name && (layer.name === 'line-2' || layer.name === 'line-3')) {
               let info = this.rectTxtInfo;
-              let resWidth = computeInfoRectWidth(info[3]);
+              let changedResWidth = computeInfoRectWidth(info[3]);
               layer.setIcon(
                 new MyIconRect({
                   html: `
@@ -411,7 +460,7 @@
                       </div>
                     </div>
                   `,
-                  iconSize: [resWidth + 2, undefined],
+                  iconSize: [changedResWidth + 2, undefined],
                   className: 'my-div-icon-rect-shadow'
                 })
               );
@@ -546,6 +595,7 @@
   .ins-popup-style div:nth-child(1) {
     border-radius: 0 !important;
   }
+
   .ins-popup-style div:nth-child(2) {
     display: none;
   }
