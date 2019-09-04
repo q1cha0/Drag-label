@@ -1,7 +1,9 @@
 <template>
   <div class="container">
     <div id="map"></div>
-    <!--<button @click="changeData">click</button>-->
+    <button id="replace-img">换图</button>
+    <div></div>
+    <button id="alter-label">换标</button>
   </div>
 </template>
 <script>
@@ -43,13 +45,13 @@
             fontSize: '16px'
           },
           {
-            1: '膨胀机一组--',
-            2: '5685 RPM',
+            1: '--膨胀机一组--',
+            2: '-5685 RPM-',
             fontSize: '16px'
           },
           {
-            1: 'V1A10688--',
-            2: '18.49 um',
+            1: '--V1A10688--',
+            2: '-18.49 um-',
             fontSize: '16px'
           }
         ]
@@ -189,9 +191,6 @@
         infoRect.on('drag', () => {
           infoRect.closePopup();
           popupTimer && clearTimeout(popupTimer);
-
-          // test 同时拖拽若干个矩形
-
         });
         infoRect.on('click', e => {
           // 关闭默认marker打开的popup
@@ -330,6 +329,8 @@
             infoRect.setPopupContent(`update${ (Math.random() * 100).toFixed(0) }`);
           });
 
+          // TODO：这里需要根据是否有 入库坐标 来确定？？？
+          // 如果使用的是入库坐标，是否又需要一个变量来储存么？？？
           markerLayerGroupArr.push(markCircle);
         }
 
@@ -378,9 +379,9 @@
       let map = L.map('map', {
         maxBounds: latlngBounds,
         crs: L.CRS.Simple,
-        dragging: false,
-        minZoom: 0,
-        maxZoom: 0,
+        // dragging: false,
+        // minZoom: 0,
+        // maxZoom: 0,
         // center: [0, 0],
         boxZoomBounds: latlngBounds,
         trackResize: false,
@@ -390,7 +391,8 @@
       });
       // map.setView([0, 0], 0); // 中心点，scale
       map.fitBounds(latlngBounds);
-      L.imageOverlay('machine-view-overview.png', latlngBounds).addTo(map);
+      let imgOverlay = L.imageOverlay('machine-view-overview.png', latlngBounds);
+      imgOverlay.addTo(map);
       L.control.layers(null, overlayLabels).addTo(map);
 
       // 添加磁吸对齐线层
@@ -414,6 +416,25 @@
         L.gridLayer.autoAlignLine({ pane: 'overlayPane', tileSize: 50, opacity: 0.3 })
       );
 
+      // test: 更改 image 图层
+      // TODO: 更换图片，是否会导致比例的变更？
+      let replaceBtn = document.getElementById('replace-img');
+      let switchFlag = false;
+      replaceBtn.addEventListener('click', () => {
+        imgOverlay.setUrl(switchFlag ? 'machine-view-overview.png' : 'test-replace-pic.png');
+        switchFlag = !switchFlag;
+      });
+
+      // test 窗口resize
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 5000);
+
+      // invalidateSize 之后，map resize 触发
+      map.on('resize', () => {
+        alert(123);
+      });
+
       // test: 移除layer
       // setTimeout(() => {
       //   map.removeLayer(markerLayer);
@@ -427,6 +448,7 @@
       // map.on('mouseup', e => {
       //   console.log(e);
       // });
+
       // test 模拟功能键+鼠标多选 marker
       map.on('boxzoomend', e => {
         // console.log(e);
@@ -441,7 +463,7 @@
           alert('全中');
           // console.log(L.layerGroup());
           markerLayer.eachLayer(layer => {
-            console.log(layer.name);
+            // console.log(layer.name);
             // TODO 这里的情况，原来的name算法是有问题的
             if (layer.name && (layer.name === 'line-2' || layer.name === 'line-3')) {
               let info = this.rectTxtInfo;
@@ -531,11 +553,6 @@
             this._map.containerPointToLatLng(this._point)
           );
           this._map.fire('boxzoomend', { boxZoomBounds: bounds });
-
-          // cancel fit bound
-          // if (!this._map.options.noFit) {
-          //   this._map.fitBounds(bounds);
-          // }
         };
       })();
 
@@ -544,7 +561,8 @@
 </script>
 <style>
   #map {
-    width: 600px;
+    /*width: 600px;*/
+    width: 100%;
     height: 600px;
   }
 
