@@ -561,8 +561,8 @@
 </script>
 <style>
   #map {
-    /*width: 600px;*/
-    width: 100%;
+    width: 600px;
+    /*width: 100%;*/
     height: 600px;
   }
 
