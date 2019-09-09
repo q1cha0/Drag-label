@@ -1,6 +1,7 @@
 <template>
   <div class="container">
     <div id="map"></div>
+    <input type="file" id="file" style="display: none;">
     <button id="replace-img">换图</button>
     <div></div>
     <button id="alter-label">换标</button>
@@ -225,7 +226,7 @@
               className: isShadow ? 'my-div-icon-rect-shadow' : 'my-div-icon-rect'
             });
           };
-          let isIconCircleHighlight = function(idx, isShodow) {
+          let isIconCircleHighlight = function(idx, isShadow) {
             return L.divIcon({
               className: 'my-div-icon-circle',
               html: `<div style="background-color: ${
@@ -375,17 +376,20 @@
       };
 
 // *************** map ***************
-      let latlngBounds = [[0, 0], [338, 600]]; // “经纬度”边界
+      // 初始使用的图片大小 750 * 422
+      // 默认的宽度是 600
+      // 做比例换算，bounds lat = 422 * 600 / 750
+      let latlngBounds = [[0, 0], [338, 600]]; // “经纬度”边界，这里是需要换算的
       let map = L.map('map', {
-        maxBounds: latlngBounds,
+        // maxBounds: latlngBounds,
         crs: L.CRS.Simple,
-        // dragging: false,
-        // minZoom: 0,
-        // maxZoom: 0,
-        // center: [0, 0],
-        boxZoomBounds: latlngBounds,
-        trackResize: false,
-        zoomAnimation: false,
+        dragging: false,
+        minZoom: 0,
+        maxZoom: 0,
+        center: [0, 0],
+        // boxZoomBounds: latlngBounds,
+        // trackResize: false,
+        // zoomAnimation: false,
         inertia: false,
         layers: [markerLayer] // 默认显示的图层~
       });
@@ -419,11 +423,37 @@
       // test: 更改 image 图层
       // TODO: 更换图片，是否会导致比例的变更？
       let replaceBtn = document.getElementById('replace-img');
+      // let fileOpen = document.getElementById('file');
+      // replaceBtn.addEventListener('click', () => {
+      //   //  触发 input file
+      //   fileOpen.click();
+      // });
+      // // 被动触发，拦截上传文件，获取相关信息
+      // fileOpen.onchange = ev => {
+      //   let file = ev.target.files[0];
+      //   if (file) {
+      //     let reader = new FileReader();
+      //     reader.onload = ev => {
+      //       let data = ev.target.result;
+      //       let image = new Image();
+      //       image.onload = () => {
+      //         console.log(image.width, image.height);
+      //       };
+      //       image.src = data;
+      //     };
+      //     reader.readAsDataURL(file);
+      //   }
+      // };
       let switchFlag = false;
       replaceBtn.addEventListener('click', () => {
+        // 动态计算bounds的值
+        latlngBounds = [[0, 0], [426, 600]];
         imgOverlay.setUrl(switchFlag ? 'machine-view-overview.png' : 'test-replace-pic.png');
+        imgOverlay.setBounds(latlngBounds);
+        map.fitBounds(latlngBounds);
         switchFlag = !switchFlag;
       });
+
 
       // test 窗口resize
       setTimeout(() => {
