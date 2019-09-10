@@ -57,6 +57,8 @@ layer / overlay
 ★自适应
     1、目前只看到视口 resize 的接口，里面的经纬度和物理像素没有看到有自动转换的接口
 
+    window 触发 resize，获取宽度，设置 map div 的 width height，更新 map/imgOverlay 的 bounds，更改 markers 的坐标，
+
 
 
 TODO：
@@ -93,4 +95,15 @@ TODO：
 
     8、另外生成表格，且可拖拽表格大小（若9，就忽略）
 
+
+
+
+
+
+
+★ THINKING
+    1、生成 map 实例，传入基本配置项
+    2、针对实例，设置一个基础图层（本项目仅需图片覆盖层，基础层应该对应的是 CRS）
+    3、我们的 map div 是视口（不认为是 map 的容器），map 实例可以在其中调整(setView)给你看到的部分（fitBounds 表现的是全居中）
+    4、拿到实例，添加覆盖层和图层等
 

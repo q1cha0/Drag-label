@@ -9,6 +9,7 @@
 </template>
 <script>
   // import leaflet from 'leaflet';
+  import { throttle } from 'lodash';
 
   export default {
     name: 'leaflet-demo',
@@ -208,11 +209,11 @@
               html: `
                 <div style="
                   font-size: ${
-                    curRectTxtInfo.fontSize
-                  };
+                curRectTxtInfo.fontSize
+              };
                   border: 1px solid ${
-                    _infoRectIconColor[idx]
-                  };
+                _infoRectIconColor[idx]
+              };
                 ">
                   <div style="border-bottom: 1px solid ${ _infoRectIconColor[idx] };">
                     ${ _rectTxtInfo[idx][1] }
@@ -226,7 +227,7 @@
               className: isShadow ? 'my-div-icon-rect-shadow' : 'my-div-icon-rect'
             });
           };
-          let isIconCircleHighlight = function(idx, isShadow) {
+          let isIconCircleHighlight = function (idx, isShadow) {
             return L.divIcon({
               className: 'my-div-icon-circle',
               html: `<div style="background-color: ${
@@ -363,16 +364,8 @@
       //   console.log(layer);
       // });
 
-      // test
-      // let littleton1 = L.marker([0, 1]).bindPopup('This is Littleton, CO.');
-      // let denver1 = L.marker([1, 2]).bindPopup('This is Denver, CO.');
-      // let aurora1 = L.marker([2, 3]).bindPopup('This is Aurora, CO.');
-      // let golden1 = L.marker([3, 4]).bindPopup('This is Golden, CO.');
-      // let markerLayer_2 = L.layerGroup([littleton1, denver1, aurora1, golden1]);
-
-      let overlayLabels = {
-        'Markers_1': markerLayer,
-        // 'Markers_2': markerLayer_2
+      let labelsOverlay = {
+        'Markers_1': markerLayer
       };
 
 // *************** map ***************
@@ -381,26 +374,28 @@
       // 做比例换算，bounds lat = 422 * 600 / 750
       let latlngBounds = [[0, 0], [338, 600]]; // “经纬度”边界，这里是需要换算的
       let map = L.map('map', {
+        crs: L.CRS.Simple, // 坐标参考系统
         // maxBounds: latlngBounds,
-        crs: L.CRS.Simple,
         dragging: false,
-        minZoom: 0,
-        maxZoom: 0,
-        center: [0, 0],
+        // minZoom: 0,
+        // maxZoom: 0,
+        // center: [0, 0],
         // boxZoomBounds: latlngBounds,
-        // trackResize: false,
+        // trackResize: true, // 地图根据window resize调整自身
         // zoomAnimation: false,
-        inertia: false,
+        // inertia: false, // 地图平移是否具有惯性效果
         layers: [markerLayer] // 默认显示的图层~
       });
-      // map.setView([0, 0], 0); // 中心点，scale
+      // [338, 600] [169, 300]
+      // map.setView([38, 300], 0); // 中心点，scale
       map.fitBounds(latlngBounds);
+      // map.fitBounds([[-100, -100], [338, 600]]); // BINGO
+
       let imgOverlay = L.imageOverlay('machine-view-overview.png', latlngBounds);
       imgOverlay.addTo(map);
-      L.control.layers(null, overlayLabels).addTo(map);
+      L.control.layers(null, labelsOverlay).addTo(map);
 
       // 添加磁吸对齐线层
-      // 扩展gridlayer类
       L.GridLayer.AutoAlignLine = L.GridLayer.extend({
         createTile: function () {
           let tile = document.createElement('div');
@@ -411,14 +406,16 @@
           return tile;
         }
       });
-      // 实例
       L.gridLayer.autoAlignLine = function (opts) {
         return new L.GridLayer.AutoAlignLine(opts);
       };
-      // 添加到layer
       map.addLayer(
         L.gridLayer.autoAlignLine({ pane: 'overlayPane', tileSize: 50, opacity: 0.3 })
       );
+
+      // console.log(imgOverlay.getBounds().pad(0.5));
+      // map.fitBounds(imgOverlay.getBounds().pad(0.5));
+
 
       // test: 更改 image 图层
       // TODO: 更换图片，是否会导致比例的变更？
@@ -446,7 +443,7 @@
       // };
       let switchFlag = false;
       replaceBtn.addEventListener('click', () => {
-        // 动态计算bounds的值
+        // 动态计算latlngBounds的值
         latlngBounds = [[0, 0], [426, 600]];
         imgOverlay.setUrl(switchFlag ? 'machine-view-overview.png' : 'test-replace-pic.png');
         imgOverlay.setBounds(latlngBounds);
@@ -456,14 +453,23 @@
 
 
       // test 窗口resize
-      setTimeout(() => {
-        map.invalidateSize();
-      }, 5000);
+      // setTimeout(() => {
+      //   map.invalidateSize();
+      // }, 5000);
 
       // invalidateSize 之后，map resize 触发
-      map.on('resize', () => {
-        alert(123);
-      });
+      // map.on('resize', () => {
+      //   alert(123);
+      // });
+     window.addEventListener('resize', () => {
+       // 获取实时文档的宽度
+       // console.log(document.documentElement.clientWidth);
+       let curWinWidth = document.documentElement.clientWidth;
+       let _latlngBounds = [[0, 0], [(422 * curWinWidth / 750), curWinWidth]];
+       imgOverlay.setBounds(_latlngBounds);
+       map.fitBounds(_latlngBounds);
+
+     });
 
       // test: 移除layer
       // setTimeout(() => {
@@ -590,10 +596,14 @@
   };
 </script>
 <style>
+  body {
+    margin: 0 auto;
+  }
   #map {
-    width: 600px;
-    /*width: 100%;*/
-    height: 600px;
+    /*width: 600px;*/
+    width: 100%;
+    /*height: 600px;*/
+    height: 95vh;
   }
 
   /*正常的矩形样式*/
