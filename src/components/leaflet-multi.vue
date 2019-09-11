@@ -9,12 +9,15 @@
 </template>
 <script>
   // import leaflet from 'leaflet';
-  import { throttle } from 'lodash';
 
   export default {
     name: 'leaflet-demo',
     data() {
       return {
+        imgInfo: { // 图片的原始信息
+          width: 750,
+          height: 422
+        },
         spanFontSize: '16px',
         spanVal: '',
         markerData: '别名001',
@@ -72,21 +75,14 @@
           popupAnchor: [40, 0]
         }
       });
-      let selectedMarker = false;
-      for (let i = 0; i < this.curInfoRectLatlng.length; i++) {
-        // L.layerGroup().eachLayer(layer => {
-        //   console.log(layer);
-        //   markerLayerGroupArr.push(layer);
-        // });
-        // console.log(markerLayerGroupArr);
-        // marker Div icon 类
 
-        // div icon 实例
-        // label Rect
+      for (let i = 0; i < this.curInfoRectLatlng.length; i++) {
+        // Rect div icon
         // 计算 rect divIcon 的宽度
         let curRectTxtInfo = this.rectTxtInfo[i];
         let resWidth = computeInfoRectWidth(curRectTxtInfo);
         let myIconRect = new MyIconRect({
+          // 上下两行结构
           html: `
             <div style="
               font-size: ${ curRectTxtInfo.fontSize };border: 1px solid ${ this.infoRectIconColor[i] };
@@ -101,6 +97,7 @@
           `,
           iconSize: [resWidth + 2, undefined]
         });
+
         // 圆形 div icon
         let myIconCircle = L.divIcon({
           className: 'my-div-icon-circle',
@@ -133,7 +130,7 @@
           className: 'ins-popup-style',
           offset: [0, 120]
         });
-        // 拖拽释放信息矩形
+        // 拖拽释放矩形时
         infoRect.on('dragend', e => {
           let flag = i;
           // 磁吸
@@ -188,19 +185,19 @@
           );
 
         });
+
         let popupTimer = undefined;
         // 开始拖拽矩形
         infoRect.on('drag', () => {
           infoRect.closePopup();
           popupTimer && clearTimeout(popupTimer);
         });
+        // 点击高亮
         infoRect.on('click', e => {
           // 关闭默认marker打开的popup
           infoRect.closePopup();
           popupTimer && clearTimeout(popupTimer);
 
-          // test 点击后高亮背景
-          // console.log(e.target);
           let _infoRectIconColor = this.infoRectIconColor;
           let _rectTxtInfo = this.rectTxtInfo;
           let isIconRectHighlight = function (idx, isShadow) {
@@ -227,17 +224,10 @@
               className: isShadow ? 'my-div-icon-rect-shadow' : 'my-div-icon-rect'
             });
           };
-          let isIconCircleHighlight = function (idx, isShadow) {
-            return L.divIcon({
-              className: 'my-div-icon-circle',
-              html: `<div style="background-color: ${
-                _infoRectIconColor[idx]
-              };"></div>`,
-            });
-          };
           let target = e.target;
           let tgName = target.name;
           let idx = tgName.split('-')[1];
+          let selectedMarker = false;
           if (selectedMarker) {
             let prevIdx = selectedMarker.name.split('-')[1];
             if (selectedMarker !== target) {
@@ -264,7 +254,9 @@
           infoRect.closePopup();
           popupTimer && clearTimeout(popupTimer);
         });
+
         markerLayerGroupArr.push(infoRect);
+
 // *************** 标记圆形 ***************
         if (this.curMarkCircleLatlng[i]) {
           let markCircle = L.marker(this.curMarkCircleLatlng[i], {
@@ -336,9 +328,8 @@
           markerLayerGroupArr.push(markCircle);
         }
 
-
+// *************** layer 标识处理 ***************
         let newLayers = [];
-        // 将layers放入group
         markerLayer = L.layerGroup(markerLayerGroupArr);
         markerLayer.eachLayer(layer => {
           if (
@@ -360,25 +351,31 @@
         });
       }
 
-      // markerLayer.eachLayer(layer => {
-      //   console.log(layer);
-      // });
-
-      let labelsOverlay = {
-        'Markers_1': markerLayer
-      };
-
-// *************** map ***************
+// *************** map 实例处理 ***************
       // 初始使用的图片大小 750 * 422
       // 默认的宽度是 600
       // 做比例换算，bounds lat = 422 * 600 / 750
-      let latlngBounds = [[0, 0], [338, 600]]; // “经纬度”边界，这里是需要换算的
+      let imgWidth = this.imgInfo.width; // 图片的原始宽
+      let imgHeight = this.imgInfo.height; // 图片原始高
+      let initPadding = 75; // 图片和视口的填充
+      let latlngBounds = [[0, 0], [imgHeight, imgWidth]]; // “经纬度”边界，这里是需要换算的
+      // let curWinWidth = document.documentElement.clientWidth;
+      // let curWinHeight = document.documentElement.clientHeight;
+      // let cptLat = 422 * curWinWidth / 750;
+      // let sureLat = cptLat > curWinHeight ? curWinHeight : cptLat;
+      // console.log(sureLat);
+      // let latlngBounds = [[0, 0], [sureLat, curWinWidth]];
+
+      // 动态计算 map div 的宽高
+      let mapDiv = document.getElementById('map');
+      mapDiv.style.width = `${ imgWidth + initPadding * 2 }px`;
+      mapDiv.style.height = `${ imgHeight + initPadding * 2 }px`;
       let map = L.map('map', {
         crs: L.CRS.Simple, // 坐标参考系统
         // maxBounds: latlngBounds,
         dragging: false,
-        // minZoom: 0,
-        // maxZoom: 0,
+        minZoom: 0,
+        maxZoom: 0,
         // center: [0, 0],
         // boxZoomBounds: latlngBounds,
         // trackResize: true, // 地图根据window resize调整自身
@@ -386,16 +383,24 @@
         // inertia: false, // 地图平移是否具有惯性效果
         layers: [markerLayer] // 默认显示的图层~
       });
-      // [338, 600] [169, 300]
-      // map.setView([38, 300], 0); // 中心点，scale
-      map.fitBounds(latlngBounds);
-      // map.fitBounds([[-100, -100], [338, 600]]); // BINGO
+      let mapToFitBounds = [
+        [latlngBounds[0][0] - initPadding, latlngBounds[0][1] - initPadding],
+        [imgHeight + initPadding, imgWidth + initPadding]
+      ];
+      map.fitBounds(mapToFitBounds);
+      L.bounds();
 
+      // map 增加 img 层
       let imgOverlay = L.imageOverlay('machine-view-overview.png', latlngBounds);
       imgOverlay.addTo(map);
+
+      // map 增加标记标签
+      let labelsOverlay = {
+        'Markers_1': markerLayer
+      };
       L.control.layers(null, labelsOverlay).addTo(map);
 
-      // 添加磁吸对齐线层
+      // map 增加网格线
       L.GridLayer.AutoAlignLine = L.GridLayer.extend({
         createTile: function () {
           let tile = document.createElement('div');
@@ -413,11 +418,7 @@
         L.gridLayer.autoAlignLine({ pane: 'overlayPane', tileSize: 50, opacity: 0.3 })
       );
 
-      // console.log(imgOverlay.getBounds().pad(0.5));
-      // map.fitBounds(imgOverlay.getBounds().pad(0.5));
-
-
-      // test: 更改 image 图层
+      // Test: 更改 image 图层
       // TODO: 更换图片，是否会导致比例的变更？
       let replaceBtn = document.getElementById('replace-img');
       // let fileOpen = document.getElementById('file');
@@ -443,16 +444,30 @@
       // };
       let switchFlag = false;
       replaceBtn.addEventListener('click', () => {
+        // img: 1752 * 1245
         // 动态计算latlngBounds的值
-        latlngBounds = [[0, 0], [426, 600]];
+        let replaceImgInfo = { // 假定换的图片的信息是这样
+          width: 1752,
+          height: 1245
+        };
+        let rImgWidth = !switchFlag ? replaceImgInfo.width : this.imgInfo.width;
+        let rImgHeight = !switchFlag ? replaceImgInfo.height : this.imgInfo.height;
+        mapDiv.style.width = `${ rImgWidth + initPadding * 2 }px`;
+        mapDiv.style.height = `${ rImgHeight + initPadding * 2 }px`;
+
+        latlngBounds = [[0, 0], [rImgHeight, rImgWidth]];
+        mapToFitBounds = [
+          [latlngBounds[0][0] - initPadding, latlngBounds[0][1] - initPadding],
+          [rImgHeight + initPadding, rImgWidth + initPadding]
+        ];
         imgOverlay.setUrl(switchFlag ? 'machine-view-overview.png' : 'test-replace-pic.png');
+        console.log(latlngBounds, mapToFitBounds);
         imgOverlay.setBounds(latlngBounds);
-        map.fitBounds(latlngBounds);
+        map.fitBounds(mapToFitBounds);
         switchFlag = !switchFlag;
       });
 
-
-      // test 窗口resize
+      // Test 窗口resize
       // setTimeout(() => {
       //   map.invalidateSize();
       // }, 5000);
@@ -464,14 +479,15 @@
      window.addEventListener('resize', () => {
        // 获取实时文档的宽度
        // console.log(document.documentElement.clientWidth);
-       let curWinWidth = document.documentElement.clientWidth;
-       let _latlngBounds = [[0, 0], [(422 * curWinWidth / 750), curWinWidth]];
-       imgOverlay.setBounds(_latlngBounds);
-       map.fitBounds(_latlngBounds);
+       // let curWinWidth = document.documentElement.clientWidth;
+       // let _latlngBounds = [[0, 0], [(422 * curWinWidth / 750), curWinWidth]];
+       // console.log(_latlngBounds);
+       // imgOverlay.setBounds(_latlngBounds);
+       // map.fitBounds(_latlngBounds);
 
      });
 
-      // test: 移除layer
+      // Test: 移除layer
       // setTimeout(() => {
       //   map.removeLayer(markerLayer);
       //   console.log('finish');
@@ -480,12 +496,12 @@
       //   })
       // }, 1000);
 
-      // 光标从画布之外移入其中，同时发生了鼠标事件，可以监听到经纬度
+      // Test: 光标从画布之外移入其中，同时发生了鼠标事件，可以监听到经纬度
       // map.on('mouseup', e => {
       //   console.log(e);
       // });
 
-      // test 模拟功能键+鼠标多选 marker
+      // Test: 模拟功能键+鼠标多选 marker
       map.on('boxzoomend', e => {
         // console.log(e);
         let markers = [[400, 100], [400, 250]];
@@ -527,6 +543,9 @@
         }
       });
 
+      /**
+       * @description 重绘牵引线
+       * */
       function updateLinkLine(cXLng, cYLat, rXLng, rYLat, lineLayer) {
         // 第1个就是矩形，第2个坐标y和矩形同，x和圆形同，第3个总是当前圆的经纬度
         let arr1 = []; // 矩形
@@ -558,6 +577,9 @@
         lineLayer.setLatLngs(linkLineLatlngs);
       }
 
+      /**
+       * @description 计算矩形的宽度
+       * */
       function computeInfoRectWidth(txtInfo) {
         let el = document.createElement('span');
         let bodyDom = document.getElementsByTagName('body')[0];
@@ -577,6 +599,9 @@
         return tempWidth;
       }
 
+      /**
+       * @description boxzoomend 取消调整map边界
+       * */
       (function () {
         L.Map.BoxZoom.prototype._onMouseUp = function (e) {
           if ((e.which !== 1) && (e.button !== 1)) return;
@@ -600,10 +625,11 @@
     margin: 0 auto;
   }
   #map {
-    /*width: 600px;*/
-    width: 100%;
-    /*height: 600px;*/
-    height: 95vh;
+    /*width: 900px;*/
+    /*width: 100%;*/
+    /*height: 572px;*/
+    /*height: 90vh;*/
+    /*overflow: hidden;*/
   }
 
   /*正常的矩形样式*/
