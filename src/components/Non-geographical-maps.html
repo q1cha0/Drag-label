@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css"
+          integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+          crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"
+            integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og=="
+            crossorigin=""></script>
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+      }
+
+      #map {
+        width: 600px;
+        height: 400px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+
+    <script>
+
+      var map = L.map('map', {
+        crs: L.CRS.Simple,
+        minZoom: -3
+      });
+
+      var yx = L.latLng;
+
+      var xy = function (x, y) {
+        if (L.Util.isArray(x)) {    // When doing xy([x, y]);
+          return yx(x[1], x[0]);
+        }
+        return yx(y, x);  // When doing xy(x, y);
+      };
+
+      var bounds = [xy(-25, -26.5), xy(1023, 1021.5)];
+      var image = L.imageOverlay('../../public/uqm_map_full.png', bounds).addTo(map);
+
+      var sol = xy(175.2, 145.0);
+      var mizar = xy(41.6, 130.1);
+      var kruegerZ = xy(13.4, 56.5);
+      var deneb = xy(218.7, 8.3);
+
+      L.marker(sol).addTo(map).bindPopup('Sol');
+      L.marker(mizar).addTo(map).bindPopup('Mizar');
+      L.marker(kruegerZ).addTo(map).bindPopup('Krueger-Z');
+      L.marker(deneb).addTo(map).bindPopup('Deneb');
+
+      var travel = L.polyline([sol, deneb]).addTo(map);
+
+      map.setView(xy(120, 70), 1);
+
+    </script>
+  </body>
+</html>

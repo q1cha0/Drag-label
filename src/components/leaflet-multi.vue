@@ -22,18 +22,32 @@
         spanVal: '',
         markerData: '别名001',
         rectPopupInfo: ['第一个', '第二个'],
-        curInfoRectLatlng: [[100, 100], [350, 450], [400, 100], [400, 250]], // 暂存当前信息矩形的经纬度
-        curMarkCircleLatlng: [[200, 200], [200, 350], undefined, undefined],
+        // curInfoRectLatlng: [[100, 100], [350, 450], [400, 100], [400, 250]], // 暂存当前信息矩形的经纬度
+        curInfoRectLatlng: [[-50, 100], [-300, 450], [-350, 100], [-350, 250]], // 暂存当前信息矩形的经纬度
+        // curMarkCircleLatlng: [[200, 200], [200, 350], undefined, undefined],
+        curMarkCircleLatlng: [[-200, 200], [-200, 350], undefined, undefined],
+        // linkLineLatlngs: [
+        //   [
+        //     [100, 100], // 矩形
+        //     [100, 200], // 拐点
+        //     [200, 200] // 圆上
+        //   ],
+        //   [
+        //     [350, 450],
+        //     [350, 350],
+        //     [200, 350]
+        //   ], undefined, undefined
+        // ],
         linkLineLatlngs: [
           [
-            [100, 100], // 矩形
-            [100, 200], // 拐点
-            [200, 200] // 圆上
+            [-100, 100], // 矩形
+            [-100, 200], // 拐点
+            [-200, 200] // 圆上
           ],
           [
-            [350, 450],
-            [350, 350],
-            [200, 350]
+            [-350, 450],
+            [-350, 350],
+            [-200, 350]
           ], undefined, undefined
         ],
         // infoRectIconSize: [80, 20], // w h
@@ -265,6 +279,7 @@
           });
           // 拖拽释放标记圆形
           markCircle.on('dragend', e => {
+            console.log(e.target._latlng);
             let flag = i;
             let newLatlng = e.target._latlng;
             let newCircleXLng = newLatlng.lng;
@@ -368,8 +383,10 @@
 
       // 动态计算 map div 的宽高
       let mapDiv = document.getElementById('map');
-      mapDiv.style.width = `${ imgWidth + initPadding * 2 }px`;
-      mapDiv.style.height = `${ imgHeight + initPadding * 2 }px`;
+      // mapDiv.style.width = `${ imgWidth + initPadding * 2 }px`;
+      mapDiv.style.width = `${ imgWidth }px`;
+      // mapDiv.style.height = `${ imgHeight + initPadding * 2 }px`;
+      mapDiv.style.height = `${ imgHeight }px`;
       let map = L.map('map', {
         crs: L.CRS.Simple, // 坐标参考系统
         // maxBounds: latlngBounds,
@@ -383,15 +400,17 @@
         // inertia: false, // 地图平移是否具有惯性效果
         layers: [markerLayer] // 默认显示的图层~
       });
-      let mapToFitBounds = [
-        [latlngBounds[0][0] - initPadding, latlngBounds[0][1] - initPadding],
-        [imgHeight + initPadding, imgWidth + initPadding]
-      ];
-      map.fitBounds(mapToFitBounds);
-      L.bounds();
+      // let mapToFitBounds = [
+      //   [latlngBounds[0][0] - initPadding, latlngBounds[0][1] - initPadding],
+      //   [imgHeight + initPadding, imgWidth + initPadding]
+      // ];
+      // map.fitBounds(mapToFitBounds);
+      let testLatlngBounds = [[-imgHeight, 0], [0, imgWidth]];
+      map.fitBounds(testLatlngBounds);
 
       // map 增加 img 层
-      let imgOverlay = L.imageOverlay('machine-view-overview.png', latlngBounds);
+      // let imgOverlay = L.imageOverlay('machine-view-overview.png', latlngBounds);
+      let imgOverlay = L.imageOverlay('machine-view-overview.png', testLatlngBounds);
       imgOverlay.addTo(map);
 
       // map 增加标记标签
@@ -452,18 +471,28 @@
         };
         let rImgWidth = !switchFlag ? replaceImgInfo.width : this.imgInfo.width;
         let rImgHeight = !switchFlag ? replaceImgInfo.height : this.imgInfo.height;
-        mapDiv.style.width = `${ rImgWidth + initPadding * 2 }px`;
-        mapDiv.style.height = `${ rImgHeight + initPadding * 2 }px`;
+        // mapDiv.style.width = `${ rImgWidth + initPadding * 2 }px`;
+        // mapDiv.style.height = `${ rImgHeight + initPadding * 2 }px`;
+        mapDiv.style.width = `${ rImgWidth }px`;
+        mapDiv.style.height = `${ rImgHeight }px`;
+        map.invalidateSize();
 
-        latlngBounds = [[0, 0], [rImgHeight, rImgWidth]];
-        mapToFitBounds = [
-          [latlngBounds[0][0] - initPadding, latlngBounds[0][1] - initPadding],
-          [rImgHeight + initPadding, rImgWidth + initPadding]
-        ];
+        // latlngBounds = [[0, 0], [rImgHeight, rImgWidth]];
+        // mapToFitBounds = [
+        //   [latlngBounds[0][0] - initPadding, latlngBounds[0][1] - initPadding],
+        //   [rImgHeight + initPadding, rImgWidth + initPadding]
+        // ];
         imgOverlay.setUrl(switchFlag ? 'machine-view-overview.png' : 'test-replace-pic.png');
-        console.log(latlngBounds, mapToFitBounds);
-        imgOverlay.setBounds(latlngBounds);
-        map.fitBounds(mapToFitBounds);
+        // console.log(latlngBounds, mapToFitBounds);
+        // imgOverlay.setBounds(latlngBounds);
+        // map.fitBounds(mapToFitBounds);
+
+        // map.off();
+        // map.remove();
+        testLatlngBounds = [[-rImgHeight, 0], [0, rImgWidth]];
+        imgOverlay.setBounds(testLatlngBounds);
+        map.fitBounds(testLatlngBounds);
+
         switchFlag = !switchFlag;
       });
 
