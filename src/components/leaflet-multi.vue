@@ -307,7 +307,8 @@
               linkLineLayer
             );
 
-            // test 模拟更新 rect 中的信息
+            // test 模拟更新 rect 中的
+            // 信息
             let changedTxt = {
               1: '膨胀机一组检测设备',
               2: '5685 RPM',
@@ -407,6 +408,8 @@
       // map.fitBounds(mapToFitBounds);
       let testLatlngBounds = [[-imgHeight, 0], [0, imgWidth]];
       map.fitBounds(testLatlngBounds);
+      map.setMaxBounds(testLatlngBounds);
+      console.log(map.getBounds());
 
       // map 增加 img 层
       // let imgOverlay = L.imageOverlay('machine-view-overview.png', latlngBounds);
@@ -469,13 +472,23 @@
           width: 1752,
           height: 1245
         };
+
         let rImgWidth = !switchFlag ? replaceImgInfo.width : this.imgInfo.width;
         let rImgHeight = !switchFlag ? replaceImgInfo.height : this.imgInfo.height;
         // mapDiv.style.width = `${ rImgWidth + initPadding * 2 }px`;
         // mapDiv.style.height = `${ rImgHeight + initPadding * 2 }px`;
-        mapDiv.style.width = `${ rImgWidth }px`;
-        mapDiv.style.height = `${ rImgHeight }px`;
+        // mapDiv.style.width = `${ rImgWidth }px`;
+        // mapDiv.style.height = `${ rImgHeight }px`;
+        // map.invalidateSize();
+
+        mapDiv.style.width = `400px`;
+        mapDiv.style.height = `400px`;
         map.invalidateSize();
+        imgOverlay.setBounds([[-235, 0], [-10, 400]]);
+        map.fitBounds([[-225, 0], [0, 400]]);
+        console.log(map.getBounds());
+        return false;
+
 
         // latlngBounds = [[0, 0], [rImgHeight, rImgWidth]];
         // mapToFitBounds = [
@@ -492,7 +505,7 @@
         testLatlngBounds = [[-rImgHeight, 0], [0, rImgWidth]];
         imgOverlay.setBounds(testLatlngBounds);
         map.fitBounds(testLatlngBounds);
-
+        map.setMaxBounds(testLatlngBounds);
         switchFlag = !switchFlag;
       });
 

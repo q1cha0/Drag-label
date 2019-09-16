@@ -57,7 +57,11 @@ layer / overlay
 ★自适应
     1、目前只看到视口 resize 的接口，里面的经纬度和物理像素没有看到有自动转换的接口
 
-    window 触发 resize，获取宽度，设置 map div 的 width height，更新 map/imgOverlay 的 bounds，更改 markers 的坐标，
+    window 触发 resize，获取宽度，设置 map div 的 width height，更新 map/imgOverlay 的 bounds，更改 markers 的坐标
+
+
+★ 视口的处理问题：
+    1、
 
 
 
@@ -109,4 +113,5 @@ TODO：
 
 借利好高开——略微回抽——走高——下午跳水——部分拉回，最终收一颗高位带上下影线的星。
 
-纯拍脑袋，仅供娱乐。如有雷同，纯属巧合。 ​​​​
+纯拍脑袋，仅供娱乐。如有雷同，纯属巧合。
+​​​​
