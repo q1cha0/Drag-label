@@ -2,9 +2,9 @@
   <div class="container">
     <div id="map"></div>
     <input type="file" id="file" style="display: none;">
-    <button id="replace-img">换图</button>
-    <div></div>
-    <button id="alter-label">换标</button>
+    <button style="display: block; position: absolute; right: 0;top: 100px;z-index: 9999;" id="replace-img">换图</button>
+    <div style="display: none;"></div>
+    <button style="display: none;" id="alter-label">换标</button>
   </div>
 </template>
 <script>
@@ -14,14 +14,17 @@
     name: 'leaflet-demo',
     data() {
       return {
-        imgInfo: { // 图片的原始信息
+        prevMapViewBounds: [ // 前次地图的边界，markers需要依此换算
+          [-422, 0],
+          [0, 750]
+        ],
+        imgInfo: { // 图片的原始信息（反正每次都要适应当前窗口，不如直接保存图片原始比例）
           width: 750,
           height: 422
         },
-        spanFontSize: '16px',
+        spanFontSize: '16px', // 标签的字体大小
         spanVal: '',
-        markerData: '别名001',
-        rectPopupInfo: ['第一个', '第二个'],
+        rectPopupInfo: ['第一个', '第二个'], // 标签鼠标悬浮的内容
         // curInfoRectLatlng: [[100, 100], [350, 450], [400, 100], [400, 250]], // 暂存当前信息矩形的经纬度
         curInfoRectLatlng: [[-50, 100], [-300, 450], [-350, 100], [-350, 250]], // 暂存当前信息矩形的经纬度
         // curMarkCircleLatlng: [[200, 200], [200, 350], undefined, undefined],
@@ -39,44 +42,73 @@
         //   ], undefined, undefined
         // ],
         linkLineLatlngs: [
-          [
-            [-100, 100], // 矩形
-            [-100, 200], // 拐点
-            [-200, 200] // 圆上
-          ],
-          [
-            [-350, 450],
-            [-350, 350],
-            [-200, 350]
-          ], undefined, undefined
+          [[-100, 100], [-100, 200], [-200, 200]], // 矩形 拐点 圆
+          [[-350, 450], [-350, 350], [-200, 350]],
+          undefined,
+          undefined
         ],
         // infoRectIconSize: [80, 20], // w h
-        infoRectIconColor: ['red', 'orange', 'red', 'orange'],
+        infoRectIconColor: ['red', 'orange', 'red', 'orange'], // 标签的颜色
         rectTxtInfo: [
-          {
-            1: '膨胀机一组',
-            2: '5685 RPM',
-            fontSize: '16px'
-          },
-          {
-            1: 'V1A10688',
-            2: '18.49 um',
-            fontSize: '16px'
-          },
-          {
-            1: '--膨胀机一组--',
-            2: '-5685 RPM-',
-            fontSize: '16px'
-          },
-          {
-            1: '--V1A10688--',
-            2: '-18.49 um-',
-            fontSize: '16px'
-          }
+          { 1: '膨胀机一组', 2: '5685 RPM', fontSize: '16px' },
+          { 1: 'V1A10688', 2: '18.49 um', fontSize: '16px' },
+          { 1: '--膨胀机一组--', 2: '-5685 RPM-', fontSize: '16px' },
+          { 1: '--V1A10688--', 2: '-18.49 um-', fontSize: '16px' }
         ]
       };
     },
     mounted() {
+      // 换算比例
+      const docEl = document.documentElement;
+      let curWinWidth = docEl.clientWidth;
+      let curWinHeight = docEl.clientHeight;
+      // console.log(curWinWidth, curWinHeight);
+      let winRate = curWinWidth / curWinHeight;
+      let imgWidth = this.imgInfo.width; // 图片的原始宽
+      let imgHeight = this.imgInfo.height; // 图片原始高
+      let imgRate = imgWidth / imgHeight;
+      let imgShowWidth = undefined;
+      let imgShowHeight = undefined;
+      let prevMapWidth = this.prevMapViewBounds[1][1];
+      let prevMapHeight = this.prevMapViewBounds[0][0];
+      let curInfoRectLatlng = this.curInfoRectLatlng;
+      let curMarkCircleLatlng = this.curMarkCircleLatlng;
+      if (winRate <= imgRate) {
+        // img横向铺满，计算bounds
+        // TODO：后面如果加入margin的话，这里bounds还需另外处理
+        imgShowWidth = curWinWidth; // 宽即是win的width
+        imgShowHeight = imgHeight * curWinWidth / imgWidth; // 比例计算img的height
+      } else {
+        imgShowHeight = curWinHeight;
+        imgShowWidth = imgWidth * curWinHeight / imgHeight;
+      }
+      // markers的坐标处理
+      let convertLatlng = function (arr) {
+        arr.forEach(val => {
+          if (val === undefined) return false;
+          let w = val[1];
+          let h = val[0];
+          val[1] = imgShowWidth * w / prevMapWidth;
+          val[0] = -(imgShowHeight * h / prevMapHeight);
+        });
+      };
+      convertLatlng(curInfoRectLatlng); // 矩形的
+      convertLatlng(curMarkCircleLatlng); // 标记圆的
+      let curLinkLineLatlng = this.linkLineLatlngs; // 牵引线的
+      curLinkLineLatlng[0] = [
+        [curInfoRectLatlng[0][0], curInfoRectLatlng[0][1]],
+        [curInfoRectLatlng[0][0], curMarkCircleLatlng[0][1]],
+        curMarkCircleLatlng[0]
+      ];
+      curLinkLineLatlng[1] = [
+        [curInfoRectLatlng[1][0], curInfoRectLatlng[1][1]],
+        [curInfoRectLatlng[1][0], curMarkCircleLatlng[1][1]],
+        curMarkCircleLatlng[1]
+      ];
+      curLinkLineLatlng[2] = undefined;
+      curLinkLineLatlng[3] = undefined;
+
+
       let linkLine = undefined;
       let linkLineLatlngs = undefined;
       let markerLayer = undefined;
@@ -368,26 +400,12 @@
       }
 
 // *************** map 实例处理 ***************
-      // 初始使用的图片大小 750 * 422
-      // 默认的宽度是 600
-      // 做比例换算，bounds lat = 422 * 600 / 750
-      let imgWidth = this.imgInfo.width; // 图片的原始宽
-      let imgHeight = this.imgInfo.height; // 图片原始高
-      let initPadding = 75; // 图片和视口的填充
-      let latlngBounds = [[0, 0], [imgHeight, imgWidth]]; // “经纬度”边界，这里是需要换算的
-      // let curWinWidth = document.documentElement.clientWidth;
-      // let curWinHeight = document.documentElement.clientHeight;
-      // let cptLat = 422 * curWinWidth / 750;
-      // let sureLat = cptLat > curWinHeight ? curWinHeight : cptLat;
-      // console.log(sureLat);
-      // let latlngBounds = [[0, 0], [sureLat, curWinWidth]];
-
       // 动态计算 map div 的宽高
       let mapDiv = document.getElementById('map');
       // mapDiv.style.width = `${ imgWidth + initPadding * 2 }px`;
-      mapDiv.style.width = `${ imgWidth }px`;
+      mapDiv.style.width = `${ curWinWidth }px`;
       // mapDiv.style.height = `${ imgHeight + initPadding * 2 }px`;
-      mapDiv.style.height = `${ imgHeight }px`;
+      mapDiv.style.height = `${ curWinHeight }px`;
       let map = L.map('map', {
         crs: L.CRS.Simple, // 坐标参考系统
         // maxBounds: latlngBounds,
@@ -406,14 +424,14 @@
       //   [imgHeight + initPadding, imgWidth + initPadding]
       // ];
       // map.fitBounds(mapToFitBounds);
-      let testLatlngBounds = [[-imgHeight, 0], [0, imgWidth]];
-      map.fitBounds(testLatlngBounds);
-      map.setMaxBounds(testLatlngBounds);
-      console.log(map.getBounds());
+      let imgLatlngBounds = [[-imgShowHeight, 0], [0, imgShowWidth]];
+      // map.fitBounds(imgLatlngBounds);
+      map.fitBounds([[-curWinHeight, 0], [0, curWinWidth]]);
+      map.setMaxBounds([[-curWinHeight, 0], [0, curWinWidth]]);
 
       // map 增加 img 层
       // let imgOverlay = L.imageOverlay('machine-view-overview.png', latlngBounds);
-      let imgOverlay = L.imageOverlay('machine-view-overview.png', testLatlngBounds);
+      let imgOverlay = L.imageOverlay('machine-view-overview.png', imgLatlngBounds);
       imgOverlay.addTo(map);
 
       // map 增加标记标签
@@ -481,13 +499,13 @@
         // mapDiv.style.height = `${ rImgHeight }px`;
         // map.invalidateSize();
 
-        mapDiv.style.width = `400px`;
-        mapDiv.style.height = `400px`;
-        map.invalidateSize();
-        imgOverlay.setBounds([[-235, 0], [-10, 400]]);
-        map.fitBounds([[-225, 0], [0, 400]]);
-        console.log(map.getBounds());
-        return false;
+        // mapDiv.style.width = `400px`;
+        // mapDiv.style.height = `400px`;
+        // map.invalidateSize();
+        // imgOverlay.setBounds([[-235, 0], [-10, 400]]);
+        // map.fitBounds([[-225, 0], [0, 400]]);
+        // console.log(map.getBounds());
+        // return false;
 
 
         // latlngBounds = [[0, 0], [rImgHeight, rImgWidth]];
@@ -502,10 +520,23 @@
 
         // map.off();
         // map.remove();
-        testLatlngBounds = [[-rImgHeight, 0], [0, rImgWidth]];
-        imgOverlay.setBounds(testLatlngBounds);
-        map.fitBounds(testLatlngBounds);
-        map.setMaxBounds(testLatlngBounds);
+
+        imgRate = rImgWidth / rImgHeight;
+        if (winRate <= imgRate) {
+          // img横向铺满，计算bounds
+          // TODO：后面如果加入margin的话，这里bounds还需另外处理
+          imgShowWidth = curWinWidth; // 宽即是win的width
+          imgShowHeight = rImgHeight * curWinWidth / rImgWidth; // 比例计算img的height
+        } else {
+          imgShowHeight = curWinHeight;
+          imgShowWidth = rImgWidth * curWinHeight / rImgHeight;
+        }
+
+        imgLatlngBounds = [[-imgShowHeight, 0], [0, imgShowWidth]];
+        imgOverlay.setBounds(imgLatlngBounds);
+        map.fitBounds([[-curWinHeight, 0], [0, curWinWidth]]);
+        // map.setMaxBounds(imgLatlngBounds);
+        console.log(switchFlag);
         switchFlag = !switchFlag;
       });
 
@@ -518,16 +549,16 @@
       // map.on('resize', () => {
       //   alert(123);
       // });
-     window.addEventListener('resize', () => {
-       // 获取实时文档的宽度
-       // console.log(document.documentElement.clientWidth);
-       // let curWinWidth = document.documentElement.clientWidth;
-       // let _latlngBounds = [[0, 0], [(422 * curWinWidth / 750), curWinWidth]];
-       // console.log(_latlngBounds);
-       // imgOverlay.setBounds(_latlngBounds);
-       // map.fitBounds(_latlngBounds);
+      window.addEventListener('resize', () => {
+        // 获取实时文档的宽度
+        // console.log(document.documentElement.clientWidth);
+        // let curWinWidth = document.documentElement.clientWidth;
+        // let _latlngBounds = [[0, 0], [(422 * curWinWidth / 750), curWinWidth]];
+        // console.log(_latlngBounds);
+        // imgOverlay.setBounds(_latlngBounds);
+        // map.fitBounds(_latlngBounds);
 
-     });
+      });
 
       // Test: 移除layer
       // setTimeout(() => {
@@ -666,7 +697,9 @@
   body {
     margin: 0 auto;
   }
+
   #map {
+    position: relative;
     /*width: 900px;*/
     /*width: 100%;*/
     /*height: 572px;*/
