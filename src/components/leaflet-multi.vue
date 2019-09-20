@@ -246,6 +246,7 @@
         infoRect.on('click', e => {
           // 关闭默认marker打开的popup
           infoRect.closePopup();
+          infoRect.setZIndexOffset(9999);
           popupTimer && clearTimeout(popupTimer);
 
           let _infoRectIconColor = this.infoRectIconColor;
