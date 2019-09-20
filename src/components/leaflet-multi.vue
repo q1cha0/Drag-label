@@ -96,13 +96,13 @@
       convertLatlng(curMarkCircleLatlng); // 标记圆的
       let curLinkLineLatlng = this.linkLineLatlngs; // 牵引线的
       curLinkLineLatlng[0] = [
-        [curInfoRectLatlng[0][0], curInfoRectLatlng[0][1]],
-        [curInfoRectLatlng[0][0], curMarkCircleLatlng[0][1]],
+        [curInfoRectLatlng[0][0] - 25, curInfoRectLatlng[0][1]],
+        [curInfoRectLatlng[0][0] - 25, curMarkCircleLatlng[0][1]],
         curMarkCircleLatlng[0]
       ];
       curLinkLineLatlng[1] = [
-        [curInfoRectLatlng[1][0], curInfoRectLatlng[1][1]],
-        [curInfoRectLatlng[1][0], curMarkCircleLatlng[1][1]],
+        [curInfoRectLatlng[1][0] - 25, curInfoRectLatlng[1][1]],
+        [curInfoRectLatlng[1][0] - 25, curMarkCircleLatlng[1][1]],
         curMarkCircleLatlng[1]
       ];
       curLinkLineLatlng[2] = undefined;
@@ -122,6 +122,7 @@
         }
       });
 
+      let selectedMarker = false;
       for (let i = 0; i < this.curInfoRectLatlng.length; i++) {
         // Rect div icon
         // 计算 rect divIcon 的宽度
@@ -222,6 +223,8 @@
               layer['name'] && layer['name'] === `line-${ flag }`
             ) linkLineLayer = layer;
           });
+
+          if (i === 2 || i === 3) return false;
           updateLinkLine(
             curMarkCircleXLng,
             curMarkCircleYLat,
@@ -239,6 +242,7 @@
           popupTimer && clearTimeout(popupTimer);
         });
         // 点击高亮
+
         infoRect.on('click', e => {
           // 关闭默认marker打开的popup
           infoRect.closePopup();
@@ -273,7 +277,7 @@
           let target = e.target;
           let tgName = target.name;
           let idx = tgName.split('-')[1];
-          let selectedMarker = false;
+
           if (selectedMarker) {
             let prevIdx = selectedMarker.name.split('-')[1];
             if (selectedMarker !== target) {
@@ -630,17 +634,17 @@
         );
         linkLineLatlngs = [];
         if (normalRange) {
-          // arr1[1] = cXLng < rXLng ? rXLng : rXLng + 80; // 在矩形中间的算法
-          arr1[1] = rXLng;
-          // arr1[0] = rYLat - 20 / 2;
-          arr1[0] = rYLat;
+          arr1[1] = cXLng < rXLng ? rXLng : rXLng + 80; // 在矩形中间的算法
+          // arr1[1] = rXLng;
+          arr1[0] = rYLat - 20 / 2;
+          // arr1[0] = rYLat;
           arr2[1] = cXLng;
           arr2[0] = arr1[0];
         } else {
-          // arr1[1] = rXLng + 80 / 2;
-          arr1[1] = rXLng;
-          // arr1[0] = cYLat > rYLat ? rYLat : rYLat - 20;
-          arr1[0] = rYLat;
+          arr1[1] = rXLng + 80 / 2;
+          // arr1[1] = rXLng;
+          arr1[0] = cYLat > rYLat ? rYLat : rYLat - 20;
+          // arr1[0] = rYLat;
           arr2[1] = arr1[1];
           arr2[0] = cYLat;
         }
