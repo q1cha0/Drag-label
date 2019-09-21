@@ -14,7 +14,7 @@
     name: 'leaflet-demo',
     data() {
       return {
-        prevMapViewBounds: [ // 前次地图的边界，markers需要依此换算
+        prevMapViewBounds: [ // 前次地图的边界，markers需要依此换算比例值
           [-422, 0],
           [0, 750]
         ],
@@ -52,8 +52,8 @@
         rectTxtInfo: [
           { 1: '膨胀机一组', 2: '5685 RPM', fontSize: '16px' },
           { 1: 'V1A10688', 2: '18.49 um', fontSize: '16px' },
-          { 1: '--膨胀机一组--', 2: '-5685 RPM-', fontSize: '16px' },
-          { 1: '--V1A10688--', 2: '-18.49 um-', fontSize: '16px' }
+          { 1: '--膨胀机一组-----', 2: '-5685 RPM-', fontSize: '20px' },
+          { 1: '--V1A10688-----', 2: '-18.49 um-', fontSize: '24px' }
         ]
       };
     },
@@ -122,12 +122,14 @@
         }
       });
 
-      let selectedMarker = false;
+      let selectedMarker = false; // 用于点击高亮矩形
+      let infoRectZIndexCount = 1; // 用于矩形 z-index 的增加
       for (let i = 0; i < this.curInfoRectLatlng.length; i++) {
         // Rect div icon
         // 计算 rect divIcon 的宽度
         let curRectTxtInfo = this.rectTxtInfo[i];
-        let resWidth = computeInfoRectWidth(curRectTxtInfo);
+        let resWidth = computeInfoRectWidth(curRectTxtInfo)[0];
+        let resHeight = computeInfoRectWidth(curRectTxtInfo)[1];
         let myIconRect = new MyIconRect({
           // 上下两行结构
           html: `
@@ -142,7 +144,7 @@
               </div>
             </div>
           `,
-          iconSize: [resWidth + 2, undefined]
+          iconSize: [resWidth + 2, resHeight]
         });
 
         // 圆形 div icon
@@ -171,7 +173,8 @@
 // *************** 信息矩形 ***************
         let infoRect = L.marker(this.curInfoRectLatlng[i], {
           draggable: true,
-          icon: myIconRect
+          icon: myIconRect,
+          // riseOnHover: true
         }).bindPopup(`${ this.rectPopupInfo[i] }`, {
           closeButton: false,
           className: 'ins-popup-style',
@@ -208,6 +211,12 @@
           let autoLatLng = [autoYLat, autoXLng];
           infoRect.setLatLng(autoLatLng);
 
+          // 计算 rect 的z-index
+          let lat4ZIndex = Math.abs(infoRect.getLatLng().lat);
+          console.log(lat4ZIndex + infoRectZIndexCount + (infoRect.getIcon().options.iconSize[1]));
+          infoRect.setZIndexOffset(infoRectZIndexCount + (infoRect.getIcon().options.iconSize[1]));
+          infoRectZIndexCount = infoRectZIndexCount + (infoRect.getIcon().options.iconSize[1]);
+
           // 改变牵引线经纬度
           let curMarkCircleXLng = undefined;
           let curMarkCircleYLat = undefined;
@@ -241,18 +250,25 @@
           infoRect.closePopup();
           popupTimer && clearTimeout(popupTimer);
         });
-        // 点击高亮
 
+        // 点击高亮
         infoRect.on('click', e => {
+          console.log(infoRect.getIcon());
+          let lat4ZIndex = Math.abs(infoRect.getLatLng().lat);
+          console.log(lat4ZIndex + infoRectZIndexCount + (infoRect.getIcon().options.iconSize[1]));
+
+          infoRect.setZIndexOffset(infoRectZIndexCount + (infoRect.getIcon().options.iconSize[1]));
+          infoRectZIndexCount = infoRectZIndexCount + (infoRect.getIcon().options.iconSize[1]);
           // 关闭默认marker打开的popup
           infoRect.closePopup();
-          infoRect.setZIndexOffset(9999);
+          // infoRect.setZIndexOffset(9999);
           popupTimer && clearTimeout(popupTimer);
 
           let _infoRectIconColor = this.infoRectIconColor;
           let _rectTxtInfo = this.rectTxtInfo;
           let isIconRectHighlight = function (idx, isShadow) {
-            let resWidth = computeInfoRectWidth(_rectTxtInfo[idx]);
+            let resWidth = computeInfoRectWidth(_rectTxtInfo[idx])[0];
+            let resHeight = computeInfoRectWidth(_rectTxtInfo[idx])[1];
             return new MyIconRect({
               html: `
                 <div style="
@@ -271,7 +287,7 @@
                   </div>
                 </div>
               `,
-              iconSize: [resWidth + 2, undefined],
+              iconSize: [resWidth + 2, resHeight],
               className: isShadow ? 'my-div-icon-rect-shadow' : 'my-div-icon-rect'
             });
           };
@@ -352,7 +368,8 @@
               fontSize: '20px'
             };
 
-            let changedResWidth = computeInfoRectWidth(changedTxt);
+            let changedResWidth = computeInfoRectWidth(changedTxt)[0];
+            let changedResHeight = computeInfoRectWidth(changedTxt)[1];
             let rectColor = this.infoRectIconColor;
             infoRect.setIcon(
               new MyIconRect({
@@ -368,7 +385,7 @@
                     </div>
                   </div>
                 `,
-                iconSize: [changedResWidth + 2, undefined]
+                iconSize: [changedResWidth + 2, changedResHeight]
                 // className: 'my-div-icon-rect-shadow'
               })
             );
@@ -597,7 +614,8 @@
             // TODO 这里的情况，原来的name算法是有问题的
             if (layer.name && (layer.name === 'line-2' || layer.name === 'line-3')) {
               let info = this.rectTxtInfo;
-              let changedResWidth = computeInfoRectWidth(info[3]);
+              let changedResWidth = computeInfoRectWidth(info[3])[0];
+              let changedResHeight = computeInfoRectWidth(info[3])[1];
               layer.setIcon(
                 new MyIconRect({
                   html: `
@@ -612,7 +630,7 @@
                       </div>
                     </div>
                   `,
-                  iconSize: [changedResWidth + 2, undefined],
+                  iconSize: [changedResWidth + 2, changedResHeight],
                   className: 'my-div-icon-rect-shadow'
                 })
               );
@@ -665,16 +683,19 @@
         el.setAttribute('style', `font-size: ${ txtInfo.fontSize };display: inline-block;`);
         el.setAttribute('class', 'delete-span');
         let tempWidth = 0;
+        // let wholeRectHeight = 0;
         for (let key in txtInfo) {
           if (txtInfo.hasOwnProperty(key) && (key === '1' || key === '2')) {
             el.innerHTML = txtInfo[key];
             let width = Number(window.getComputedStyle(el).width.split('px')[0]);
+            // let height = Number(window.getComputedStyle(el).height.split('px')[0]);
             if (width > tempWidth) tempWidth = width;
+            // wholeRectHeight = wholeRectHeight + height;
           }
         }
         let delDom = document.getElementsByClassName('delete-span')[0];
         bodyDom.removeChild(delDom);
-        return tempWidth;
+        return [tempWidth, txtInfo.fontSize.split('px')[0] * 3];
       }
 
       /**
