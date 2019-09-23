@@ -26,7 +26,7 @@
         spanVal: '',
         rectPopupInfo: ['第一个', '第二个'], // 标签鼠标悬浮的内容
         // curInfoRectLatlng: [[100, 100], [350, 450], [400, 100], [400, 250]], // 暂存当前信息矩形的经纬度
-        curInfoRectLatlng: [[-50, 100], [-300, 450], [-350, 100], [-350, 250]], // 暂存当前信息矩形的经纬度
+        curInfoRectLatlng: [[-50, 50], [-300, 450], [-350, 100], [-350, 250]], // 暂存当前信息矩形的经纬度
         // curMarkCircleLatlng: [[200, 200], [200, 350], undefined, undefined],
         curMarkCircleLatlng: [[-200, 200], [-200, 350], undefined, undefined],
         // linkLineLatlngs: [
@@ -42,18 +42,18 @@
         //   ], undefined, undefined
         // ],
         linkLineLatlngs: [
-          [[-100, 100], [-100, 200], [-200, 200]], // 矩形 拐点 圆
+          [[-67, 180], [-167, 200], [-200, 200]], // 矩形 拐点 圆
           [[-350, 450], [-350, 350], [-200, 350]],
           undefined,
           undefined
         ],
         // infoRectIconSize: [80, 20], // w h
-        infoRectIconColor: ['red', 'orange', 'red', 'orange'], // 标签的颜色
+        infoRectIconColor: ['red', 'orange', 'blue', 'green'], // 标签的颜色
         rectTxtInfo: [
-          { 1: '膨胀机一组', 2: '5685 RPM', fontSize: '16px' },
+          { 1: '膨胀机一组', 2: '5685 RPM', fontSize: '26px' },
           { 1: 'V1A10688', 2: '18.49 um', fontSize: '16px' },
-          { 1: '--膨胀机一组-----', 2: '-5685 RPM-', fontSize: '20px' },
-          { 1: '--V1A10688-----', 2: '-18.49 um-', fontSize: '24px' }
+          { 1: '--膨胀机一组---TEst', 2: '-5685 RPM-', fontSize: '18px' },
+          { 1: 'V1A10688-TEst', 2: '-18.49 um-', fontSize: '18px' }
         ]
       };
     },
@@ -62,7 +62,6 @@
       const docEl = document.documentElement;
       let curWinWidth = docEl.clientWidth;
       let curWinHeight = docEl.clientHeight;
-      // console.log(curWinWidth, curWinHeight);
       let winRate = curWinWidth / curWinHeight;
       let imgWidth = this.imgInfo.width; // 图片的原始宽
       let imgHeight = this.imgInfo.height; // 图片原始高
@@ -82,7 +81,7 @@
         imgShowHeight = curWinHeight;
         imgShowWidth = imgWidth * curWinHeight / imgHeight;
       }
-      // markers的坐标处理
+      // markers的坐标处理方法
       let convertLatlng = function (arr) {
         arr.forEach(val => {
           if (val === undefined) return false;
@@ -92,17 +91,18 @@
           val[0] = -(imgShowHeight * h / prevMapHeight);
         });
       };
+      // 对矩形 圆形 牵引线同时处理
       convertLatlng(curInfoRectLatlng); // 矩形的
       convertLatlng(curMarkCircleLatlng); // 标记圆的
       let curLinkLineLatlng = this.linkLineLatlngs; // 牵引线的
       curLinkLineLatlng[0] = [
-        [curInfoRectLatlng[0][0] - 25, curInfoRectLatlng[0][1]],
-        [curInfoRectLatlng[0][0] - 25, curMarkCircleLatlng[0][1]],
+        [curInfoRectLatlng[0][0] - 27, curInfoRectLatlng[0][1] + 130],
+        [curInfoRectLatlng[0][0] - 27, curMarkCircleLatlng[0][1]],
         curMarkCircleLatlng[0]
       ];
       curLinkLineLatlng[1] = [
-        [curInfoRectLatlng[1][0] - 25, curInfoRectLatlng[1][1]],
-        [curInfoRectLatlng[1][0] - 25, curMarkCircleLatlng[1][1]],
+        [curInfoRectLatlng[1][0] - 17, curInfoRectLatlng[1][1]],
+        [curInfoRectLatlng[1][0] - 17, curMarkCircleLatlng[1][1]],
         curMarkCircleLatlng[1]
       ];
       curLinkLineLatlng[2] = undefined;
@@ -124,6 +124,8 @@
       let selectedMarker = false; // 用于点击高亮矩形
       let infoRectZIndexCount = 1; // 用于矩形 z-index 的增加
       for (let i = 0; i < this.curInfoRectLatlng.length; i++) {
+        // TEST Evented
+        let testFn = undefined;
         // Rect div icon
         // 计算 rect divIcon 的宽度
         let curRectTxtInfo = this.rectTxtInfo[i];
@@ -166,6 +168,8 @@
             pane: 'markerPane'
             // draggable: true
           });
+          // TODO:如果不改变DivIcon大小，初始化时，即需要判断牵引线的走位
+          // updateLinkLine();
           markerLayerGroupArr.push(linkLine);
         }
 
@@ -213,11 +217,19 @@
           let autoLatLng = [autoYLat, autoXLng];
           infoRect.setLatLng(autoLatLng);
 
-          // 计算 rect 的z-index
+          // 计算 rect 的z-index，将聚焦信息矩形放在最前面
           let lat4ZIndex = Math.abs(infoRect.getLatLng().lat);
-          console.log(lat4ZIndex + infoRectZIndexCount + (infoRect.getIcon().options.iconSize[1]));
-          infoRect.setZIndexOffset(infoRectZIndexCount + (infoRect.getIcon().options.iconSize[1]));
-          infoRectZIndexCount = infoRectZIndexCount + (infoRect.getIcon().options.iconSize[1]);
+
+          let iconOpt = infoRect.getIcon().options;
+          infoRect.setZIndexOffset(infoRectZIndexCount + iconOpt.iconSize[1]);
+          infoRectZIndexCount = /*iconOpt + */infoRectZIndexCount + iconOpt.iconSize[1];
+
+          // 使polyline z-index动态变化
+          document
+            .querySelectorAll('.leaflet-pane .leaflet-marker-pane')[0]
+            .firstChild
+            .style
+            .zIndex = infoRectZIndexCount + lat4ZIndex;
 
           // 改变牵引线经纬度
           let curMarkCircleXLng = undefined;
@@ -241,7 +253,9 @@
             curMarkCircleYLat,
             autoXLng,
             autoYLat,
-            linkLineLayer
+            linkLineLayer,
+            iconOpt.iconSize[0],
+            iconOpt.iconSize[1]
           );
 
         });
@@ -249,20 +263,33 @@
         let popupTimer = undefined;
         // 开始拖拽矩形
         infoRect.on('drag', () => {
+          // 彻底关闭 popup
           infoRect.closePopup();
           popupTimer && clearTimeout(popupTimer);
         });
 
-        // 点击高亮
+        testFn = () => {
+          console.log(infoRect.name);
+        };
+        // 点击信息矩形
         infoRect.on('click', e => {
-          // console.log(infoRect.getIcon());
-          infoRect.setZIndexOffset(infoRectZIndexCount + (infoRect.getIcon().options.iconSize[1]));
-          infoRectZIndexCount = infoRectZIndexCount + (infoRect.getIcon().options.iconSize[1]);
+          let lat4ZIndex = Math.abs(infoRect.getLatLng().lat);
+          // 将聚焦的信息矩形放到最前面
+          let iconOpt = infoRect.getIcon().options;
+          infoRect.setZIndexOffset(infoRectZIndexCount + (iconOpt.iconSize[1]));
+          infoRectZIndexCount = infoRectZIndexCount + (iconOpt.iconSize[1]);
+
+          document
+            .querySelectorAll('.leaflet-pane .leaflet-marker-pane')[0]
+            .firstChild
+            .style
+            .zIndex = infoRectZIndexCount + lat4ZIndex;
 
           // 关闭默认marker打开的popup
           infoRect.closePopup();
           popupTimer && clearTimeout(popupTimer);
 
+          // 切换矩形高亮
           let _infoRectIconColor = this.infoRectIconColor;
           let _rectTxtInfo = this.rectTxtInfo;
           let isIconRectHighlight = function (idx, isShadow) {
@@ -271,7 +298,7 @@
             return new MyIconRect({
               html: `
                 <div style="
-                  font-size: ${ curRectTxtInfo.fontSize };
+                  font-size: ${ _rectTxtInfo[idx].fontSize };
                   border: 1px solid ${ _infoRectIconColor[idx] };
                   line-height: 1;
                 ">
@@ -288,6 +315,7 @@
             });
           };
           let target = e.target;
+          // console.log(e.target);
           let tgName = target.name;
           let idx = tgName.split('-')[1];
 
@@ -326,9 +354,10 @@
             draggable: true,
             icon: myIconCircle
           });
+          // TEST Evented
+          markCircle.on('click', testFn);
           // 拖拽释放标记圆形
           markCircle.on('dragend', e => {
-            console.log(e.target._latlng);
             let flag = i;
             let newLatlng = e.target._latlng;
             let newCircleXLng = newLatlng.lng;
@@ -337,24 +366,8 @@
             let curInfoRectXLng = undefined;
             let curInfoRectYLat = undefined;
             let linkLineLayer = undefined;
-            markerLayer.eachLayer(layer => {
-              if (
-                layer['name'] && layer['name'] === `rect-${ flag }`
-              ) {
-                curInfoRectXLng = layer._latlng.lng;
-                curInfoRectYLat = layer._latlng.lat;
-              }
-              if (
-                layer['name'] && layer['name'] === `line-${ flag }`
-              ) linkLineLayer = layer;
-            });
-            updateLinkLine(
-              newCircleXLng,
-              newCircleYLat,
-              curInfoRectXLng,
-              curInfoRectYLat,
-              linkLineLayer
-            );
+            let curInfoRectWidth = undefined;
+            let curInfoRectHeight = undefined;
 
             // test 模拟更新 rect 中的
             // 信息
@@ -371,7 +384,9 @@
               new MyIconRect({
                 html: `
                   <div style="
-                    font-size: ${ changedTxt.fontSize };border: 1px solid ${ rectColor[i] };
+                    font-size: ${ changedTxt.fontSize };
+                    border: 1px solid ${ rectColor[i] };
+                    line-height: 1;
                   ">
                     <div style="border-bottom: 1px solid ${ rectColor[i] };">
                       ${ changedTxt[1] }
@@ -385,6 +400,31 @@
                 // className: 'my-div-icon-rect-shadow'
               })
             );
+
+            markerLayer.eachLayer(layer => {
+              if (
+                layer['name'] && layer['name'] === `rect-${ flag }`
+              ) {
+                curInfoRectXLng = layer._latlng.lng;
+                curInfoRectYLat = layer._latlng.lat;
+                curInfoRectWidth = layer.options.icon.options.iconSize[0];
+                curInfoRectHeight = layer.options.icon.options.iconSize[1];
+                // console.log(layer.options.icon.options.iconSize[1]);
+              }
+              if (
+                layer['name'] && layer['name'] === `line-${ flag }`
+              ) linkLineLayer = layer;
+            });
+            updateLinkLine(
+              newCircleXLng,
+              newCircleYLat,
+              curInfoRectXLng,
+              curInfoRectYLat,
+              linkLineLayer,
+              curInfoRectWidth,
+              curInfoRectHeight
+            );
+
             // test 模拟更新 popup 中的信息
             infoRect.setPopupContent(`update${ (Math.random() * 100).toFixed(0) }`);
           });
@@ -618,7 +658,10 @@
                     <div style="
                       font-size: ${ info[3].fontSize };border: 1px solid ${ this.infoRectIconColor[3] };
                     ">
-                      <div style="border-bottom: 1px solid ${ this.infoRectIconColor[3] };">
+                      <div style="
+                        border-bottom: 1px solid ${ this.infoRectIconColor[3] };
+                        line-height: 1;
+                      ">
                         ${ info[3][1] }
                       </div>
                       <div>
@@ -638,27 +681,27 @@
       /**
        * @description 重绘牵引线
        * */
-      function updateLinkLine(cXLng, cYLat, rXLng, rYLat, lineLayer) {
+      function updateLinkLine(cXLng, cYLat, rXLng, rYLat, lineLayer, rCurWidth, rCurHeight) {
         // 第1个就是矩形，第2个坐标y和矩形同，x和圆形同，第3个总是当前圆的经纬度
         let arr1 = []; // 矩形
         let arr2 = []; // 拐角
         let arr3 = [cYLat, cXLng]; // 圆上
         let normalRange = (
           cXLng < rXLng || // 圆形在矩形左边界的左边
-          cXLng > rXLng + 80 // 圆形在矩形右边界的右边
+          cXLng > rXLng + rCurWidth // 圆形在矩形右边界的右边
         );
         linkLineLatlngs = [];
         if (normalRange) {
-          arr1[1] = cXLng < rXLng ? rXLng : rXLng + 80; // 在矩形中间的算法
+          arr1[1] = cXLng < rXLng ? rXLng : rXLng + rCurWidth; // 在矩形中间的算法
           // arr1[1] = rXLng;
-          arr1[0] = rYLat - 20 / 2;
+          arr1[0] = rYLat - rCurHeight / 2;
           // arr1[0] = rYLat;
           arr2[1] = cXLng;
           arr2[0] = arr1[0];
         } else {
-          arr1[1] = rXLng + 80 / 2;
+          arr1[1] = rXLng + rCurWidth / 2;
           // arr1[1] = rXLng;
-          arr1[0] = cYLat > rYLat ? rYLat : rYLat - 20;
+          arr1[0] = cYLat > rYLat ? rYLat : rYLat - rCurHeight;
           // arr1[0] = rYLat;
           arr2[1] = arr1[1];
           arr2[0] = cYLat;
@@ -685,9 +728,8 @@
           if (txtInfo.hasOwnProperty(key) && (key === '1' || key === '2')) {
             el.innerHTML = txtInfo[key];
             let width = Number(window.getComputedStyle(el).width.split('px')[0]);
-            // let height = Number(window.getComputedStyle(el).height.split('px')[0]);
+            // 获取两行中最长宽度那个
             if (width > tempWidth) tempWidth = width;
-            // wholeRectHeight = wholeRectHeight + height;
           }
         }
         let delDom = document.getElementsByClassName('delete-span')[0];
