@@ -108,7 +108,6 @@
       curLinkLineLatlng[2] = undefined;
       curLinkLineLatlng[3] = undefined;
 
-
       let linkLine = undefined;
       let linkLineLatlngs = undefined;
       let markerLayer = undefined;
@@ -128,13 +127,15 @@
         // Rect div icon
         // 计算 rect divIcon 的宽度
         let curRectTxtInfo = this.rectTxtInfo[i];
-        let resWidth = computeInfoRectWidth(curRectTxtInfo)[0];
-        let resHeight = computeInfoRectWidth(curRectTxtInfo)[1];
+        let resWidth = computeInfoRectSize(curRectTxtInfo)[0];
+        let resHeight = computeInfoRectSize(curRectTxtInfo)[1];
         let myIconRect = new MyIconRect({
           // 上下两行结构
           html: `
             <div style="
-              font-size: ${ curRectTxtInfo.fontSize };border: 1px solid ${ this.infoRectIconColor[i] };
+              font-size: ${ curRectTxtInfo.fontSize };
+              border: 1px solid ${ this.infoRectIconColor[i] };
+              line-height: 1;
             ">
               <div style="border-bottom: 1px solid ${ this.infoRectIconColor[i] };">
                 ${ curRectTxtInfo[1] }
@@ -161,7 +162,8 @@
           linkLine = L.polyline(linkLineLatlngs, {
             color: this.infoRectIconColor[i],
             weight: 1,
-            className: 'polyline-shadow'
+            className: 'polyline-shadow',
+            pane: 'markerPane'
             // draggable: true
           });
           markerLayerGroupArr.push(linkLine);
@@ -253,31 +255,25 @@
 
         // 点击高亮
         infoRect.on('click', e => {
-          console.log(infoRect.getIcon());
-          let lat4ZIndex = Math.abs(infoRect.getLatLng().lat);
-          console.log(lat4ZIndex + infoRectZIndexCount + (infoRect.getIcon().options.iconSize[1]));
-
+          // console.log(infoRect.getIcon());
           infoRect.setZIndexOffset(infoRectZIndexCount + (infoRect.getIcon().options.iconSize[1]));
           infoRectZIndexCount = infoRectZIndexCount + (infoRect.getIcon().options.iconSize[1]);
+
           // 关闭默认marker打开的popup
           infoRect.closePopup();
-          // infoRect.setZIndexOffset(9999);
           popupTimer && clearTimeout(popupTimer);
 
           let _infoRectIconColor = this.infoRectIconColor;
           let _rectTxtInfo = this.rectTxtInfo;
           let isIconRectHighlight = function (idx, isShadow) {
-            let resWidth = computeInfoRectWidth(_rectTxtInfo[idx])[0];
-            let resHeight = computeInfoRectWidth(_rectTxtInfo[idx])[1];
+            let resWidth = computeInfoRectSize(_rectTxtInfo[idx])[0];
+            let resHeight = computeInfoRectSize(_rectTxtInfo[idx])[1];
             return new MyIconRect({
               html: `
                 <div style="
-                  font-size: ${
-                curRectTxtInfo.fontSize
-              };
-                  border: 1px solid ${
-                _infoRectIconColor[idx]
-              };
+                  font-size: ${ curRectTxtInfo.fontSize };
+                  border: 1px solid ${ _infoRectIconColor[idx] };
+                  line-height: 1;
                 ">
                   <div style="border-bottom: 1px solid ${ _infoRectIconColor[idx] };">
                     ${ _rectTxtInfo[idx][1] }
@@ -368,8 +364,8 @@
               fontSize: '20px'
             };
 
-            let changedResWidth = computeInfoRectWidth(changedTxt)[0];
-            let changedResHeight = computeInfoRectWidth(changedTxt)[1];
+            let changedResWidth = computeInfoRectSize(changedTxt)[0];
+            let changedResHeight = computeInfoRectSize(changedTxt)[1];
             let rectColor = this.infoRectIconColor;
             infoRect.setIcon(
               new MyIconRect({
@@ -614,8 +610,8 @@
             // TODO 这里的情况，原来的name算法是有问题的
             if (layer.name && (layer.name === 'line-2' || layer.name === 'line-3')) {
               let info = this.rectTxtInfo;
-              let changedResWidth = computeInfoRectWidth(info[3])[0];
-              let changedResHeight = computeInfoRectWidth(info[3])[1];
+              let changedResWidth = computeInfoRectSize(info[3])[0];
+              let changedResHeight = computeInfoRectSize(info[3])[1];
               layer.setIcon(
                 new MyIconRect({
                   html: `
@@ -671,12 +667,13 @@
         linkLineLatlngs.push(arr2);
         linkLineLatlngs.push(arr3);
         lineLayer.setLatLngs(linkLineLatlngs);
+        lineLayer.bringToFront();
       }
 
       /**
-       * @description 计算矩形的宽度
+       * @description 计算infoRect的size
        * */
-      function computeInfoRectWidth(txtInfo) {
+      function computeInfoRectSize(txtInfo) {
         let el = document.createElement('span');
         let bodyDom = document.getElementsByTagName('body')[0];
         bodyDom.appendChild(el);
@@ -695,7 +692,7 @@
         }
         let delDom = document.getElementsByClassName('delete-span')[0];
         bodyDom.removeChild(delDom);
-        return [tempWidth, txtInfo.fontSize.split('px')[0] * 3];
+        return [tempWidth, txtInfo.fontSize.split('px')[0] * 2 + 3];
       }
 
       /**
@@ -731,6 +728,10 @@
     /*height: 572px;*/
     /*height: 90vh;*/
     /*overflow: hidden;*/
+  }
+
+  #map .leaflet-map-pane svg {
+    z-index: 999999;
   }
 
   /*正常的矩形样式*/
