@@ -9,6 +9,8 @@
 </template>
 <script>
   // import leaflet from 'leaflet';
+  import { debounce } from 'lodash';
+  import $ from 'jquery';
 
   export default {
     name: 'leaflet-demo',
@@ -66,7 +68,7 @@
       let imgWidth = this.imgInfo.width; // 图片的原始宽
       let imgHeight = this.imgInfo.height; // 图片原始高
       let imgRate = imgWidth / imgHeight;
-      let imgShowWidth = undefined;
+      let imgShowWidth = undefined; // 换算后，图片应该显示的宽 高
       let imgShowHeight = undefined;
       let prevMapWidth = this.prevMapViewBounds[1][1];
       let prevMapHeight = this.prevMapViewBounds[0][0];
@@ -607,16 +609,20 @@
       // map.on('resize', () => {
       //   alert(123);
       // });
-      window.addEventListener('resize', () => {
-        // 获取实时文档的宽度
-        // console.log(document.documentElement.clientWidth);
-        // let curWinWidth = document.documentElement.clientWidth;
-        // let _latlngBounds = [[0, 0], [(422 * curWinWidth / 750), curWinWidth]];
-        // console.log(_latlngBounds);
-        // imgOverlay.setBounds(_latlngBounds);
-        // map.fitBounds(_latlngBounds);
+      window.addEventListener('resize', debounce(
+        () => {
+          // alert(123);
+          // 获取实时文档的宽度
+          // console.log(document.documentElement.clientWidth);
+          // let curWinWidth = document.documentElement.clientWidth;
+          // let _latlngBounds = [[0, 0], [(422 * curWinWidth / 750), curWinWidth]];
+          // console.log(_latlngBounds);
+          // imgOverlay.setBounds(_latlngBounds);
+          // map.fitBounds(_latlngBounds);
 
-      });
+        },
+        150
+      ));
 
       // Test: 移除layer
       // setTimeout(() => {
